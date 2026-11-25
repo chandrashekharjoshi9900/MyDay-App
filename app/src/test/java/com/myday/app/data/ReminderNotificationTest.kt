@@ -10,15 +10,26 @@ import androidx.test.core.app.ApplicationProvider
 import com.myday.app.data.local.db.MyDayDatabase
 import com.myday.app.data.reminder.NotificationHelper
 import com.myday.app.data.reminder.ReminderAlarmScheduler
+import com.myday.app.data.repository.HabitRepositoryImpl
 import com.myday.app.data.repository.ReminderRepositoryImpl
 import com.myday.app.data.repository.TaskRepositoryImpl
+import com.myday.app.domain.model.HabitItem
+import com.myday.app.domain.model.HabitScheduleType
 import com.myday.app.domain.model.ReminderItem
 import com.myday.app.domain.model.ReminderScheduleType
 import com.myday.app.domain.model.ReminderTargetType
 import com.myday.app.domain.model.TaskItem
 import com.myday.app.domain.model.TaskPriority
 import com.myday.app.domain.model.TaskRecurrence
+import com.myday.app.presentation.viewmodel.HabitsViewModel
+import com.myday.app.presentation.viewmodel.TasksViewModel
+import com.myday.app.data.repository.CategoryRepositoryImpl
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -203,5 +214,64 @@ class ReminderNotificationTest {
         assertEquals("Complete", posted.actions[0].title.toString())
         assertEquals("Snooze 10m", posted.actions[1].title.toString())
         assertEquals("Dismiss", posted.actions[2].title.toString())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `task and habit reminder times persist exact hour and minute without resetting`() = runTest {
+        val mainDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(mainDispatcher)
+        try {
+            val categoryRepo = CategoryRepositoryImpl(db.categoryDao())
+            val taskRepo = TaskRepositoryImpl(db, db.taskDao(), reminderRepository)
+            val habitRepo = HabitRepositoryImpl(db.habitDao(), db.habitLogDao(), db.categoryDao())
+
+            val tasksVm = TasksViewModel(taskRepo, categoryRepo, reminderRepository)
+            val habitsVm = HabitsViewModel(habitRepo, categoryRepo, reminderRepository)
+
+            tasksVm.saveTask(
+                existing = null,
+                title = "Night prep",
+                description = "",
+                priority = TaskPriority.MEDIUM,
+                categoryId = null,
+                dueEpochDay = java.time.LocalDate.now().plusDays(1).toEpochDay(),
+                dueTimeMinutes = null,
+                recurrence = TaskRecurrence.NONE,
+                recurrenceWeekdays = emptySet(),
+                hasReminder = true,
+                reminderMinutes = 21 * 60 + 45
+            )
+
+            habitsVm.saveHabit(
+                existing = null,
+                title = "Morning walk",
+                description = "",
+                categoryId = null,
+                colorHex = 0xFF8E7CFFL,
+                scheduleType = HabitScheduleType.DAILY,
+                selectedWeekdays = emptySet(),
+                weeklyTarget = 7,
+                reminderTimeMinutes = 6 * 60 + 15
+            )
+
+            var reminders = reminderRepository.getAllReminders()
+            var attempts = 0
+            while (reminders.size < 2 && attempts < 30) {
+                Thread.sleep(50)
+                reminders = reminderRepository.getAllReminders()
+                attempts++
+            }
+
+            val taskRem = reminders.first { it.targetType == ReminderTargetType.TASK }
+            val habitRem = reminders.first { it.targetType == ReminderTargetType.HABIT }
+
+            assertEquals(21, taskRem.hour)
+            assertEquals(45, taskRem.minute)
+            assertEquals(6, habitRem.hour)
+            assertEquals(15, habitRem.minute)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }

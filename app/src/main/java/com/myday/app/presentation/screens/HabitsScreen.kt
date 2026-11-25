@@ -88,6 +88,7 @@ import com.myday.app.presentation.theme.rememberMyDayHaptic
 import com.myday.app.presentation.viewmodel.HabitFilterTab
 import com.myday.app.presentation.viewmodel.HabitsUiState
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -495,15 +496,19 @@ private fun HabitEditorDialog(
         reminderTimeMinutes: Int?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(existing?.title.orEmpty()) }
-    var description by remember { mutableStateOf(existing?.description.orEmpty()) }
-    var categoryId by remember { mutableStateOf(existing?.categoryId) }
-    var colorHex by remember { mutableLongStateOf(existing?.colorHex ?: MyDayPalette.AccentSwatches.first()) }
-    var scheduleType by remember { mutableStateOf(existing?.scheduleType ?: HabitScheduleType.DAILY) }
-    var weekdays by remember { mutableStateOf(existing?.selectedWeekdays ?: setOf(1, 2, 3, 4, 5)) }
-    var weeklyTarget by remember { mutableIntStateOf(existing?.weeklyTarget ?: 3) }
-    var hasReminder by remember { mutableStateOf(existing?.reminderTimeMinutes != null) }
-    var reminderMinutes by remember { mutableIntStateOf(existing?.reminderTimeMinutes ?: (9 * 60)) }
+    val defaultTime = remember { LocalTime.now().plusMinutes(15) }
+    val defaultMinutes = defaultTime.hour * 60 + defaultTime.minute
+    val dialogKey = existing?.id ?: "new_habit"
+
+    var title by remember(dialogKey) { mutableStateOf(existing?.title.orEmpty()) }
+    var description by remember(dialogKey) { mutableStateOf(existing?.description.orEmpty()) }
+    var categoryId by remember(dialogKey) { mutableStateOf(existing?.categoryId) }
+    var colorHex by remember(dialogKey) { mutableLongStateOf(existing?.colorHex ?: MyDayPalette.AccentSwatches.first()) }
+    var scheduleType by remember(dialogKey) { mutableStateOf(existing?.scheduleType ?: HabitScheduleType.DAILY) }
+    var weekdays by remember(dialogKey) { mutableStateOf(existing?.selectedWeekdays ?: setOf(1, 2, 3, 4, 5)) }
+    var weeklyTarget by remember(dialogKey) { mutableIntStateOf(existing?.weeklyTarget ?: 3) }
+    var hasReminder by remember(dialogKey) { mutableStateOf(existing?.reminderTimeMinutes != null) }
+    var reminderMinutes by remember(dialogKey) { mutableIntStateOf(existing?.reminderTimeMinutes ?: defaultMinutes) }
     var showTimePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -594,15 +599,16 @@ private fun HabitEditorDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Daily Reminder", style = MaterialTheme.typography.labelLarge)
                         if (hasReminder) {
-                            Text(
-                                text = formatTimeMinutes(reminderMinutes),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.clickable { showTimePicker = true }
-                            )
+                            OutlinedButton(
+                                onClick = { showTimePicker = true },
+                                modifier = Modifier.padding(top = 4.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text("Time: ${formatTimeMinutes(reminderMinutes)}")
+                            }
                         }
                     }
                     Switch(

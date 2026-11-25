@@ -181,7 +181,44 @@ class HabitsViewModel(
             if (paused) {
                 reminderRepository.toggleEnabled(linkedReminderId, false)
             } else {
-                reminderRepository.toggleEnabled(linkedReminderId, true)
+                val existingReminder = reminderRepository.getReminderById(linkedReminderId)
+                if (existingReminder != null) {
+                    reminderRepository.toggleEnabled(linkedReminderId, true)
+                } else {
+                    val habit = habitRepository.getHabitById(habitId)
+                    val remMin = habit?.reminderTimeMinutes
+                    if (habit != null && remMin != null && !habit.isArchived) {
+                        val now = System.currentTimeMillis()
+                        reminderRepository.upsertAndSchedule(
+                            ReminderItem(
+                                id = linkedReminderId,
+                                title = "Habit: ${habit.title}",
+                                notes = habit.description.ifBlank { "Time for your scheduled habit!" },
+                                scheduleType = when (habit.scheduleType) {
+                                    HabitScheduleType.WEEKDAYS -> ReminderScheduleType.CUSTOM_WEEKDAYS
+                                    else -> ReminderScheduleType.DAILY
+                                },
+                                hour = remMin / 60,
+                                minute = remMin % 60,
+                                oneTimeEpochDay = null,
+                                weekdays = habit.selectedWeekdays,
+                                dayOfMonth = null,
+                                intervalHours = null,
+                                nextTriggerMillis = now,
+                                isEnabled = true,
+                                isCompleted = false,
+                                snoozedUntilMillis = null,
+                                playSound = true,
+                                vibrate = true,
+                                targetType = ReminderTargetType.HABIT,
+                                targetId = habitId,
+                                lastTriggeredMillis = null,
+                                createdAtMillis = now,
+                                updatedAtMillis = now
+                            )
+                        )
+                    }
+                }
             }
         }
     }

@@ -34,7 +34,8 @@ data class TasksUiState(
     val tasks: List<TaskItem> = emptyList(),
     val pendingCount: Int = 0,
     val completedCount: Int = 0,
-    val categories: List<CategoryItem> = emptyList()
+    val categories: List<CategoryItem> = emptyList(),
+    val reminderTimesById: Map<String, Int> = emptyMap()
 )
 
 class TasksViewModel(
@@ -49,9 +50,10 @@ class TasksViewModel(
     val uiState: StateFlow<TasksUiState> = combine(
         taskRepository.observeAllTasks(),
         categoryRepository.observeAll(),
+        reminderRepository.observeAllReminders(),
         selectedTab,
         priorityFilter
-    ) { allTasks, categories, tab, pFilter ->
+    ) { allTasks, categories, allReminders, tab, pFilter ->
         val byPriority = if (pFilter == null) allTasks else allTasks.filter { it.priority == pFilter }
         val filtered = when (tab) {
             TaskFilterTab.PENDING -> byPriority
@@ -64,6 +66,7 @@ class TasksViewModel(
                 .filter { it.isCompleted }
                 .sortedByDescending { it.completedAtMillis ?: it.updatedAtMillis }
         }
+        val reminderTimes = allReminders.associate { it.id to (it.hour * 60 + it.minute) }
         TasksUiState(
             isLoading = false,
             selectedTab = tab,
@@ -71,7 +74,8 @@ class TasksViewModel(
             tasks = filtered,
             pendingCount = allTasks.count { !it.isCompleted },
             completedCount = allTasks.count { it.isCompleted },
-            categories = categories
+            categories = categories,
+            reminderTimesById = reminderTimes
         )
     }.stateIn(
         scope = viewModelScope,

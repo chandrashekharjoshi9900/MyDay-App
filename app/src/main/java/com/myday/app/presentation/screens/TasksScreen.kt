@@ -71,6 +71,7 @@ import com.myday.app.presentation.viewmodel.TaskFilterTab
 import com.myday.app.presentation.viewmodel.TasksUiState
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -191,9 +192,11 @@ fun TasksScreen(
                 ) {
                     items(state.tasks, key = { it.id }) { task ->
                         val category = state.categories.firstOrNull { it.id == task.categoryId }
+                        val reminderMinutes = task.reminderId?.let { state.reminderTimesById[it] }
                         TaskCard(
                             task = task,
                             category = category,
+                            reminderMinutes = reminderMinutes,
                             showCompletedTimestamp = state.selectedTab == TaskFilterTab.HISTORY,
                             onToggle = {
                                 haptic()
@@ -214,6 +217,7 @@ fun TasksScreen(
     if (showEditor) {
         TaskEditorDialog(
             existing = editingTask,
+            existingReminderMinutes = editingTask?.reminderId?.let { state.reminderTimesById[it] },
             categories = state.categories,
             onDismiss = { showEditor = false },
             onConfirm = { title, desc, priority, catId, dueDay, dueMin, rec, recWeekdays, hasRem, remMin ->
@@ -228,6 +232,7 @@ fun TasksScreen(
 private fun TaskCard(
     task: TaskItem,
     category: CategoryItem?,
+    reminderMinutes: Int?,
     showCompletedTimestamp: Boolean,
     onToggle: () -> Unit,
     onEdit: () -> Unit,
@@ -318,6 +323,13 @@ private fun TaskCard(
                             tint = MyDayPalette.AmberWarning,
                             modifier = Modifier.size(16.dp)
                         )
+                        if (reminderMinutes != null) {
+                            Text(
+                                text = formatTimeMinutes(reminderMinutes),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MyDayPalette.AmberWarning
+                            )
+                        }
                     }
                 }
                 if (category != null || (showCompletedTimestamp && task.completedAtMillis != null)) {
@@ -360,6 +372,7 @@ private fun TaskCard(
 @Composable
 private fun TaskEditorDialog(
     existing: TaskItem?,
+    existingReminderMinutes: Int?,
     categories: List<CategoryItem>,
     onDismiss: () -> Unit,
     onConfirm: (
@@ -375,16 +388,23 @@ private fun TaskEditorDialog(
         reminderMinutes: Int?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(existing?.title.orEmpty()) }
-    var description by remember { mutableStateOf(existing?.description.orEmpty()) }
-    var priority by remember { mutableStateOf(existing?.priority ?: TaskPriority.MEDIUM) }
-    var categoryId by remember { mutableStateOf(existing?.categoryId) }
-    var dueEpochDay by remember { mutableStateOf(existing?.dueEpochDay ?: LocalDate.now().toEpochDay()) }
-    var dueTimeMinutes by remember { mutableStateOf(existing?.dueTimeMinutes) }
-    var recurrence by remember { mutableStateOf(existing?.recurrence ?: TaskRecurrence.NONE) }
-    var weekdays by remember { mutableStateOf(existing?.recurrenceWeekdays ?: setOf(1, 3, 5)) }
-    var hasReminder by remember { mutableStateOf(existing?.reminderId != null) }
-    var reminderMinutes by remember { mutableIntStateOf(existing?.dueTimeMinutes ?: (10 * 60)) }
+    val defaultTime = remember { LocalTime.now().plusMinutes(15) }
+    val defaultMinutes = defaultTime.hour * 60 + defaultTime.minute
+    val dialogKey = existing?.id ?: "new_task"
+
+    var title by remember(dialogKey) { mutableStateOf(existing?.title.orEmpty()) }
+    var description by remember(dialogKey) { mutableStateOf(existing?.description.orEmpty()) }
+    var priority by remember(dialogKey) { mutableStateOf(existing?.priority ?: TaskPriority.MEDIUM) }
+    var categoryId by remember(dialogKey) { mutableStateOf(existing?.categoryId) }
+    var dueEpochDay by remember(dialogKey) { mutableStateOf(existing?.dueEpochDay ?: LocalDate.now().toEpochDay()) }
+    var dueTimeMinutes by remember(dialogKey) { mutableStateOf(existing?.dueTimeMinutes) }
+    var recurrence by remember(dialogKey) { mutableStateOf(existing?.recurrence ?: TaskRecurrence.NONE) }
+    var weekdays by remember(dialogKey) { mutableStateOf(existing?.recurrenceWeekdays ?: setOf(1, 3, 5)) }
+    var hasReminder by remember(dialogKey) { mutableStateOf(existing?.reminderId != null) }
+    var reminderMinutes by remember(dialogKey, existingReminderMinutes) {
+        mutableIntStateOf(existingReminderMinutes ?: existing?.dueTimeMinutes ?: defaultMinutes)
+    }
+    var userEditedReminderTime by remember(dialogKey) { mutableStateOf(existingReminderMinutes != null) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showDueTimePicker by remember { mutableStateOf(false) }
@@ -473,23 +493,26 @@ private fun TaskEditorDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Schedule Reminder", style = MaterialTheme.typography.labelLarge)
                         if (hasReminder) {
-                            Text(
-                                text = formatTimeMinutes(reminderMinutes),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.clickable { showReminderTimePicker = true }
-                            )
+                            OutlinedButton(
+                                onClick = { showReminderTimePicker = true },
+                                modifier = Modifier.padding(top = 4.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text("Time: ${formatTimeMinutes(reminderMinutes)}")
+                            }
                         }
                     }
                     Switch(
                         checked = hasReminder,
-                        onCheckedChange = {
-                            hasReminder = it
-                            if (it) {
-                                reminderMinutes = dueTimeMinutes ?: reminderMinutes
+                        onCheckedChange = { enabled ->
+                            hasReminder = enabled
+                            if (enabled) {
+                                if (!userEditedReminderTime && dueTimeMinutes != null) {
+                                    reminderMinutes = dueTimeMinutes!!
+                                }
                                 showReminderTimePicker = true
                             }
                         }
@@ -535,7 +558,7 @@ private fun TaskEditorDialog(
     }
 
     if (showDueTimePicker) {
-        val current = dueTimeMinutes ?: (9 * 60)
+        val current = dueTimeMinutes ?: defaultMinutes
         MyDayTimePickerDialog(
             initialHour = current / 60,
             initialMinute = current % 60,
@@ -554,6 +577,7 @@ private fun TaskEditorDialog(
             onDismiss = { showReminderTimePicker = false },
             onConfirm = { h, m ->
                 reminderMinutes = h * 60 + m
+                userEditedReminderTime = true
                 showReminderTimePicker = false
             }
         )

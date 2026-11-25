@@ -494,18 +494,19 @@ private fun ReminderEditorDialog(
         vibrate: Boolean
     ) -> Unit
 ) {
-    val defaultTime = LocalTime.now().plusMinutes(15)
-    var title by remember { mutableStateOf(existing?.title.orEmpty()) }
-    var notes by remember { mutableStateOf(existing?.notes.orEmpty()) }
-    var scheduleType by remember { mutableStateOf(existing?.scheduleType ?: ReminderScheduleType.ONE_TIME) }
-    var hour by remember { mutableIntStateOf(existing?.hour ?: defaultTime.hour) }
-    var minute by remember { mutableIntStateOf(existing?.minute ?: defaultTime.minute) }
-    var epochDay by remember { mutableStateOf(existing?.oneTimeEpochDay ?: LocalDate.now().toEpochDay()) }
-    var weekdays by remember { mutableStateOf(existing?.weekdays ?: setOf(LocalDate.now().dayOfWeek.value)) }
-    var dayOfMonth by remember { mutableIntStateOf(existing?.dayOfMonth ?: LocalDate.now().dayOfMonth) }
-    var intervalHours by remember { mutableIntStateOf(existing?.intervalHours ?: 6) }
-    var playSound by remember { mutableStateOf(existing?.playSound ?: true) }
-    var vibrate by remember { mutableStateOf(existing?.vibrate ?: true) }
+    val defaultTime = remember { LocalTime.now().plusMinutes(15) }
+    val dialogKey = existing?.id ?: "new_reminder"
+    var title by remember(dialogKey) { mutableStateOf(existing?.title.orEmpty()) }
+    var notes by remember(dialogKey) { mutableStateOf(existing?.notes.orEmpty()) }
+    var scheduleType by remember(dialogKey) { mutableStateOf(existing?.scheduleType ?: ReminderScheduleType.ONE_TIME) }
+    var hour by remember(dialogKey) { mutableIntStateOf(existing?.hour ?: defaultTime.hour) }
+    var minute by remember(dialogKey) { mutableIntStateOf(existing?.minute ?: defaultTime.minute) }
+    var epochDay by remember(dialogKey) { mutableStateOf(existing?.oneTimeEpochDay ?: LocalDate.now().toEpochDay()) }
+    var weekdays by remember(dialogKey) { mutableStateOf(existing?.weekdays ?: setOf(LocalDate.now().dayOfWeek.value)) }
+    var dayOfMonth by remember(dialogKey) { mutableIntStateOf(existing?.dayOfMonth ?: LocalDate.now().dayOfMonth) }
+    var intervalHours by remember(dialogKey) { mutableIntStateOf(existing?.intervalHours ?: 6) }
+    var playSound by remember(dialogKey) { mutableStateOf(existing?.playSound ?: true) }
+    var vibrate by remember(dialogKey) { mutableStateOf(existing?.vibrate ?: true) }
 
     var showTimePicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
