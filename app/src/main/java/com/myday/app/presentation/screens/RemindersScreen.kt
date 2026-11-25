@@ -94,6 +94,7 @@ fun RemindersScreen(
     onBack: () -> Unit,
     onRefreshDiagnostics: () -> Unit,
     onSendTestNotification: () -> Unit,
+    onPreviewSound: () -> Unit,
     onRescheduleAll: () -> Unit,
     onSaveReminder: (
         existing: ReminderItem?,
@@ -294,6 +295,9 @@ fun RemindersScreen(
                             }
                             OutlinedButton(onClick = onSendTestNotification) {
                                 Text("Send Test Notification")
+                            }
+                            OutlinedButton(onClick = onPreviewSound) {
+                                Text("Test Ringtone")
                             }
                         }
                     }

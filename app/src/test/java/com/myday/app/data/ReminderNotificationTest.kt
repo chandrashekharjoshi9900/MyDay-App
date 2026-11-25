@@ -8,8 +8,10 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.myday.app.data.local.db.MyDayDatabase
+import com.myday.app.data.reminder.NotificationChannels
 import com.myday.app.data.reminder.NotificationHelper
 import com.myday.app.data.reminder.ReminderAlarmScheduler
+import com.myday.app.domain.model.ReminderTone
 import com.myday.app.data.repository.HabitRepositoryImpl
 import com.myday.app.data.repository.ReminderRepositoryImpl
 import com.myday.app.data.repository.TaskRepositoryImpl
@@ -273,5 +275,52 @@ class ReminderNotificationTest {
         } finally {
             Dispatchers.resetMain()
         }
+    }
+
+    @Test
+    fun `reminder notification attaches chime sound and selects tone-specific channel`() {
+        val now = System.currentTimeMillis()
+        val reminder = ReminderItem(
+            id = "rem_sound",
+            title = "Drink Water",
+            notes = "With chime",
+            scheduleType = ReminderScheduleType.DAILY,
+            hour = 11,
+            minute = 0,
+            oneTimeEpochDay = null,
+            weekdays = emptySet(),
+            dayOfMonth = null,
+            intervalHours = null,
+            nextTriggerMillis = now + 60_000L,
+            isEnabled = true,
+            isCompleted = false,
+            snoozedUntilMillis = null,
+            playSound = true,
+            vibrate = true,
+            targetType = ReminderTargetType.STANDALONE,
+            targetId = null,
+            lastTriggeredMillis = null,
+            createdAtMillis = now,
+            updatedAtMillis = now
+        )
+
+        assertEquals(NotificationChannels.REMINDERS_CHIME, NotificationChannels.channelIdFor(true, ReminderTone.CHIME))
+        assertEquals(NotificationChannels.REMINDERS_ALARM, NotificationChannels.channelIdFor(true, ReminderTone.ALARM_RINGTONE))
+        assertEquals(NotificationChannels.REMINDERS_SILENT, NotificationChannels.channelIdFor(false, ReminderTone.CHIME))
+        val expectedUri = notificationHelper.soundUriFor(ReminderTone.CHIME)
+        assertTrue(expectedUri.toString().contains(com.myday.app.R.raw.myday_reminder_tone.toString()))
+
+        notificationHelper.showReminderNotification(
+            reminder = reminder,
+            soundEnabled = true,
+            vibrateEnabled = true,
+            snoozeMinutes = 10,
+            tone = ReminderTone.CHIME
+        )
+
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val posted = Shadows.shadowOf(nm).allNotifications.first()
+        assertEquals(NotificationChannels.REMINDERS_CHIME, posted.channelId)
+        assertEquals(expectedUri, nm.getNotificationChannel(NotificationChannels.REMINDERS_CHIME)?.sound)
     }
 }

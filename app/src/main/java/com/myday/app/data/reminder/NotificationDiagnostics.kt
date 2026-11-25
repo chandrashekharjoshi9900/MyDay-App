@@ -34,7 +34,7 @@ class NotificationDiagnostics(
     fun inspect(activeScheduledCount: Int, nextAlarmMillis: Long?): NotificationDiagnosticsStatus {
         notificationHelper.ensureChannels()
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channel = notificationManager.getNotificationChannel(NotificationChannels.REMINDERS_SOUND)
+        val channel = notificationManager.getNotificationChannel(NotificationChannels.REMINDERS_CHIME)
         val channelEnabled = channel == null || channel.importance != NotificationManager.IMPORTANCE_NONE
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val ignoringBattery = powerManager.isIgnoringBatteryOptimizations(context.packageName)

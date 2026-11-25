@@ -56,6 +56,12 @@ enum class ThemeMode(val label: String) {
     LIGHT("Light")
 }
 
+enum class ReminderTone(val label: String) {
+    CHIME("MYDAY Chime"),
+    SYSTEM_NOTIFICATION("System Notification"),
+    ALARM_RINGTONE("Alarm Ringtone")
+}
+
 enum class AnalyticsPeriod(val label: String) {
     DAILY("Daily"),
     WEEKLY("Weekly"),
@@ -216,6 +222,7 @@ data class AppSettingsModel(
     val themeMode: ThemeMode = ThemeMode.DARK,
     val notificationsEnabled: Boolean = true,
     val notificationSoundEnabled: Boolean = true,
+    val reminderTone: ReminderTone = ReminderTone.CHIME,
     val vibrationEnabled: Boolean = true,
     val defaultSnoozeMinutes: Int = 10,
     val hapticFeedbackEnabled: Boolean = true,

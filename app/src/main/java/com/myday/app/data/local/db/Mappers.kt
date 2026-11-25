@@ -14,6 +14,7 @@ import com.myday.app.domain.model.MilestoneItem
 import com.myday.app.domain.model.ReminderItem
 import com.myday.app.domain.model.ReminderScheduleType
 import com.myday.app.domain.model.ReminderTargetType
+import com.myday.app.domain.model.ReminderTone
 import com.myday.app.domain.model.TaskItem
 import com.myday.app.domain.model.TaskPriority
 import com.myday.app.domain.model.TaskRecurrence
@@ -284,6 +285,7 @@ fun AppSettingsEntity.toDomain(): AppSettingsModel = AppSettingsModel(
     themeMode = runCatching { ThemeMode.valueOf(themeMode) }.getOrDefault(ThemeMode.DARK),
     notificationsEnabled = notificationsEnabled,
     notificationSoundEnabled = notificationSoundEnabled,
+    reminderTone = runCatching { ReminderTone.valueOf(reminderTone) }.getOrDefault(ReminderTone.CHIME),
     vibrationEnabled = vibrationEnabled,
     defaultSnoozeMinutes = defaultSnoozeMinutes,
     hapticFeedbackEnabled = hapticFeedbackEnabled,
@@ -299,6 +301,7 @@ fun AppSettingsModel.toEntity(): AppSettingsEntity = AppSettingsEntity(
     themeMode = themeMode.name,
     notificationsEnabled = notificationsEnabled,
     notificationSoundEnabled = notificationSoundEnabled,
+    reminderTone = reminderTone.name,
     vibrationEnabled = vibrationEnabled,
     defaultSnoozeMinutes = defaultSnoozeMinutes,
     hapticFeedbackEnabled = hapticFeedbackEnabled,

@@ -174,4 +174,33 @@ class MyDayDatabaseTest {
         sqliteDb.close()
         context.deleteDatabase(dbName)
     }
+
+    @Test
+    fun `migration 2 to 3 adds reminderTone column with CHIME default`() {
+        val dbName = "migration_2_3_test.db"
+        context.deleteDatabase(dbName)
+
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name(dbName)
+            .callback(object : SupportSQLiteOpenHelper.Callback(2) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (`id` TEXT NOT NULL, `userName` TEXT NOT NULL, `themeMode` TEXT NOT NULL, `notificationsEnabled` INTEGER NOT NULL, `notificationSoundEnabled` INTEGER NOT NULL, `vibrationEnabled` INTEGER NOT NULL, `defaultSnoozeMinutes` INTEGER NOT NULL, `hapticFeedbackEnabled` INTEGER NOT NULL, `defaultPomodoroMinutes` INTEGER NOT NULL, `shortBreakMinutes` INTEGER NOT NULL, `longBreakMinutes` INTEGER NOT NULL, `lastBackupMillis` INTEGER, PRIMARY KEY(`id`))")
+                    db.execSQL("INSERT INTO app_settings VALUES ('default','Friend','DARK',1,1,1,10,1,25,5,15,NULL)")
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+
+        val helper = FrameworkSQLiteOpenHelperFactory().create(config)
+        val sqliteDb = helper.writableDatabase
+        MyDayDatabase.MIGRATION_2_3.migrate(sqliteDb)
+
+        sqliteDb.query("SELECT reminderTone FROM app_settings WHERE id = 'default'").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("CHIME", cursor.getString(0))
+        }
+        sqliteDb.close()
+        context.deleteDatabase(dbName)
+    }
 }

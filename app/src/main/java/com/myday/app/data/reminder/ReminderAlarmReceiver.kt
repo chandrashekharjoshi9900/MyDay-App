@@ -30,7 +30,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                         reminder = reminder,
                         soundEnabled = settings.notificationSoundEnabled,
                         vibrateEnabled = settings.vibrationEnabled,
-                        snoozeMinutes = settings.defaultSnoozeMinutes
+                        snoozeMinutes = settings.defaultSnoozeMinutes,
+                        tone = settings.reminderTone
                     )
                 }
 

@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.myday.app.domain.model.AppSettingsModel
+import com.myday.app.domain.model.ReminderTone
 import com.myday.app.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -24,6 +25,7 @@ class UserPreferencesDataStore(private val context: Context) {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+        val REMINDER_TONE = stringPreferencesKey("reminder_tone")
         val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
         val DEFAULT_SNOOZE_MINUTES = intPreferencesKey("default_snooze_minutes")
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
@@ -41,6 +43,9 @@ class UserPreferencesDataStore(private val context: Context) {
             }.getOrDefault(ThemeMode.DARK),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
             notificationSoundEnabled = prefs[Keys.SOUND_ENABLED] ?: true,
+            reminderTone = runCatching {
+                ReminderTone.valueOf(prefs[Keys.REMINDER_TONE] ?: ReminderTone.CHIME.name)
+            }.getOrDefault(ReminderTone.CHIME),
             vibrationEnabled = prefs[Keys.VIBRATION_ENABLED] ?: true,
             defaultSnoozeMinutes = prefs[Keys.DEFAULT_SNOOZE_MINUTES] ?: 10,
             hapticFeedbackEnabled = prefs[Keys.HAPTIC_FEEDBACK] ?: true,
@@ -59,6 +64,7 @@ class UserPreferencesDataStore(private val context: Context) {
             prefs[Keys.THEME_MODE] = settings.themeMode.name
             prefs[Keys.NOTIFICATIONS_ENABLED] = settings.notificationsEnabled
             prefs[Keys.SOUND_ENABLED] = settings.notificationSoundEnabled
+            prefs[Keys.REMINDER_TONE] = settings.reminderTone.name
             prefs[Keys.VIBRATION_ENABLED] = settings.vibrationEnabled
             prefs[Keys.DEFAULT_SNOOZE_MINUTES] = settings.defaultSnoozeMinutes
             prefs[Keys.HAPTIC_FEEDBACK] = settings.hapticFeedbackEnabled

@@ -48,7 +48,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.rounded.MusicNote
 import com.myday.app.BuildConfig
+import com.myday.app.domain.model.ReminderTone
 import com.myday.app.domain.model.ThemeMode
 import com.myday.app.presentation.components.MyDayCard
 import com.myday.app.presentation.components.SectionHeader
@@ -67,6 +71,8 @@ fun SettingsScreen(
     onSetUserName: (String) -> Unit,
     onSetNotificationsEnabled: (Boolean) -> Unit,
     onSetSoundEnabled: (Boolean) -> Unit,
+    onSetReminderTone: (ReminderTone) -> Unit,
+    onPreviewTone: (ReminderTone) -> Unit,
     onSetVibrationEnabled: (Boolean) -> Unit,
     onSetSnoozeMinutes: (Int) -> Unit,
     onSetHapticEnabled: (Boolean) -> Unit,
@@ -197,10 +203,39 @@ fun SettingsScreen(
                     )
                     SettingSwitchRow(
                         title = "Notification Sound",
-                        subtitle = "Play default notification tone for reminders",
+                        subtitle = "Play reminder ringtone/chime when alerts fire",
                         checked = state.settings.notificationSoundEnabled,
                         onCheckedChange = onSetSoundEnabled
                     )
+                    if (state.settings.notificationSoundEnabled) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Reminder Ringtone", style = MaterialTheme.typography.labelLarge)
+                            TextButton(onClick = { onPreviewTone(state.settings.reminderTone) }) {
+                                Icon(Icons.Rounded.MusicNote, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Preview")
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ReminderTone.entries.forEach { tone ->
+                                FilterChip(
+                                    selected = state.settings.reminderTone == tone,
+                                    onClick = { onSetReminderTone(tone) },
+                                    label = { Text(tone.label) }
+                                )
+                            }
+                        }
+                    }
                     SettingSwitchRow(
                         title = "Vibration",
                         subtitle = "Vibrate when reminders fire",

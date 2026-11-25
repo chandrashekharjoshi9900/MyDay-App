@@ -247,6 +247,7 @@ data class AppSettingsEntity(
     val themeMode: String,
     val notificationsEnabled: Boolean,
     val notificationSoundEnabled: Boolean,
+    val reminderTone: String,
     val vibrationEnabled: Boolean,
     val defaultSnoozeMinutes: Int,
     val hapticFeedbackEnabled: Boolean,

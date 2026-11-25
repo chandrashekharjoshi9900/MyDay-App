@@ -4,7 +4,9 @@ import android.content.ContentResolver
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myday.app.data.reminder.NotificationHelper
 import com.myday.app.domain.model.AppSettingsModel
+import com.myday.app.domain.model.ReminderTone
 import com.myday.app.domain.model.ThemeMode
 import com.myday.app.domain.repository.BackupPreview
 import com.myday.app.domain.repository.BackupRepository
@@ -30,7 +32,8 @@ data class SettingsUiState(
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
-    private val backupRepository: BackupRepository
+    private val backupRepository: BackupRepository,
+    private val notificationHelper: NotificationHelper
 ) : ViewModel() {
 
     private val transientState = MutableStateFlow(TransientBackupState())
@@ -74,6 +77,24 @@ class SettingsViewModel(
     fun setNotificationSoundEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateSettings { it.copy(notificationSoundEnabled = enabled) }
+        }
+    }
+
+    fun setReminderTone(tone: ReminderTone) {
+        viewModelScope.launch {
+            settingsRepository.updateSettings { it.copy(reminderTone = tone) }
+            notificationHelper.ensureChannels()
+            notificationHelper.playPreviewTone(tone)
+        }
+    }
+
+    fun previewReminderTone(tone: ReminderTone) {
+        val played = notificationHelper.playPreviewTone(tone)
+        if (!played) {
+            transientState.value = transientState.value.copy(
+                message = "Unable to play ringtone preview on this device.",
+                isError = true
+            )
         }
     }
 

@@ -62,7 +62,8 @@ class MyDayViewModelFactory(private val container: AppContainer) : ViewModelProv
 
             modelClass.isAssignableFrom(SettingsViewModel::class.java) -> SettingsViewModel(
                 settingsRepository = container.settingsRepository,
-                backupRepository = container.backupRepository
+                backupRepository = container.backupRepository,
+                notificationHelper = container.notificationHelper
             ) as T
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

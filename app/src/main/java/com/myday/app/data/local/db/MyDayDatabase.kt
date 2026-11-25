@@ -24,7 +24,7 @@ import com.myday.app.domain.model.AppSettingsModel
         JournalEntryEntity::class,
         AppSettingsEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class MyDayDatabase : RoomDatabase() {
@@ -91,6 +91,12 @@ abstract class MyDayDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE app_settings ADD COLUMN reminderTone TEXT NOT NULL DEFAULT 'CHIME'")
+            }
+        }
+
         val DEFAULT_CATEGORIES = listOf(
             CategoryEntity("cat_health", "Health", 0xFF2FD180L, "favorite", true),
             CategoryEntity("cat_work", "Work", 0xFF5298FFL, "work", true),
@@ -105,7 +111,7 @@ abstract class MyDayDatabase : RoomDatabase() {
                 MyDayDatabase::class.java,
                 DB_NAME
             )
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
@@ -133,6 +139,7 @@ abstract class MyDayDatabase : RoomDatabase() {
                 put("themeMode", defaults.themeMode.name)
                 put("notificationsEnabled", if (defaults.notificationsEnabled) 1 else 0)
                 put("notificationSoundEnabled", if (defaults.notificationSoundEnabled) 1 else 0)
+                put("reminderTone", defaults.reminderTone.name)
                 put("vibrationEnabled", if (defaults.vibrationEnabled) 1 else 0)
                 put("defaultSnoozeMinutes", defaults.defaultSnoozeMinutes)
                 put("hapticFeedbackEnabled", if (defaults.hapticFeedbackEnabled) 1 else 0)

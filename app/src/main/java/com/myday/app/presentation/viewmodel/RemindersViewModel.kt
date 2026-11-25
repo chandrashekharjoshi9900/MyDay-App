@@ -31,7 +31,7 @@ class RemindersViewModel(
     private val reminderRepository: ReminderRepository,
     val notificationDiagnostics: NotificationDiagnostics,
     private val notificationHelper: NotificationHelper,
-    settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val diagnosticsRefreshTick = MutableStateFlow(0)
@@ -71,13 +71,28 @@ class RemindersViewModel(
     }
 
     fun sendTestNotification() {
-        val posted = notificationHelper.showTestNotification()
-        statusMessage.value = if (posted) {
-            "Test notification sent. Check your notification shade."
-        } else {
-            "Notification permission is not granted yet."
+        viewModelScope.launch {
+            val tone = settingsRepository.getSettings().reminderTone
+            val posted = notificationHelper.showTestNotification(tone)
+            statusMessage.value = if (posted) {
+                "Test notification sent with ${tone.label} sound."
+            } else {
+                "Notification permission is not granted yet."
+            }
+            refreshDiagnostics()
         }
-        refreshDiagnostics()
+    }
+
+    fun previewTone() {
+        viewModelScope.launch {
+            val tone = settingsRepository.getSettings().reminderTone
+            val played = notificationHelper.playPreviewTone(tone)
+            statusMessage.value = if (played) {
+                "Playing ${tone.label} preview..."
+            } else {
+                "Could not play preview sound."
+            }
+        }
     }
 
     fun rescheduleAll() {
