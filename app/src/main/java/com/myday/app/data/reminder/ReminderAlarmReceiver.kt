@@ -25,14 +25,36 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 if (!reminder.isEnabled || reminder.isCompleted) return@launch
 
                 val settings = container.settingsRepository.getSettings()
-                if (settings.notificationsEnabled) {
-                    container.notificationHelper.showReminderNotification(
-                        reminder = reminder,
-                        soundEnabled = settings.notificationSoundEnabled,
-                        vibrateEnabled = settings.vibrationEnabled,
-                        snoozeMinutes = settings.defaultSnoozeMinutes,
-                        tone = settings.reminderTone
-                    )
+                if (settings.notificationsEnabled && container.notificationHelper.hasNotificationPermission()) {
+                    val shouldLoopSound = settings.notificationSoundEnabled && reminder.playSound
+                    if (shouldLoopSound) {
+                        val startedService = runCatching {
+                            ReminderSoundService.start(
+                                context = context,
+                                reminder = reminder,
+                                tone = settings.reminderTone,
+                                vibrate = settings.vibrationEnabled,
+                                snoozeMinutes = settings.defaultSnoozeMinutes
+                            )
+                        }.isSuccess
+                        if (!startedService) {
+                            container.notificationHelper.showReminderNotification(
+                                reminder = reminder,
+                                soundEnabled = true,
+                                vibrateEnabled = settings.vibrationEnabled,
+                                snoozeMinutes = settings.defaultSnoozeMinutes,
+                                tone = settings.reminderTone
+                            )
+                        }
+                    } else {
+                        container.notificationHelper.showReminderNotification(
+                            reminder = reminder,
+                            soundEnabled = false,
+                            vibrateEnabled = settings.vibrationEnabled,
+                            snoozeMinutes = settings.defaultSnoozeMinutes,
+                            tone = settings.reminderTone
+                        )
+                    }
                 }
 
                 val now = System.currentTimeMillis()
@@ -43,7 +65,6 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 )
 
                 if (reminder.scheduleType == ReminderScheduleType.ONE_TIME) {
-                    // Keep one-time reminder visible until user completes/dismisses, but clear snooze and disable further auto-triggers
                     val updated = clearedSnooze.copy(isEnabled = false)
                     container.database.reminderDao().upsert(updated.toEntity())
                 } else {

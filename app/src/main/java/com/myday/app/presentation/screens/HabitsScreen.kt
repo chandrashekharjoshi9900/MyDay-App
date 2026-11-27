@@ -143,7 +143,7 @@ fun HabitsScreen(
                 .padding(innerPadding)
         ) {
             // Header & Date Switcher
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,27 +151,28 @@ fun HabitsScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Habit Tracker",
+                            text = "Habits",
                             style = MaterialTheme.typography.headlineMedium
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Tracking for ${formatEpochDay(state.selectedEpochDay)}",
+                            text = "Tracking ${formatEpochDay(state.selectedEpochDay)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MyDayThemeExtras.colors.mutedText
                         )
                     }
                     OutlinedButton(onClick = { showDatePicker = true }) {
                         Icon(
                             imageVector = Icons.Rounded.CalendarMonth,
                             contentDescription = "Choose Date",
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(formatEpochDay(state.selectedEpochDay))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Filter Tabs
                 Row(
@@ -211,7 +212,7 @@ fun HabitsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.habits, key = { it.habit.id }) { item ->

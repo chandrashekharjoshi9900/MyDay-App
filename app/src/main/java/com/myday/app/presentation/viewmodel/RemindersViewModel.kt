@@ -72,12 +72,16 @@ class RemindersViewModel(
 
     fun sendTestNotification() {
         viewModelScope.launch {
-            val tone = settingsRepository.getSettings().reminderTone
-            val posted = notificationHelper.showTestNotification(tone)
+            val settings = settingsRepository.getSettings()
+            val posted = notificationHelper.startLoopingTestNotification(
+                tone = settings.reminderTone,
+                vibrate = settings.vibrationEnabled,
+                snoozeMinutes = settings.defaultSnoozeMinutes
+            )
             statusMessage.value = if (posted) {
-                "Test notification sent with ${tone.label} sound."
+                "Test reminder ringing (${settings.reminderTone.label}) — dismiss or swipe to stop"
             } else {
-                "Notification permission is not granted yet."
+                "Notification permission is not granted"
             }
             refreshDiagnostics()
         }
@@ -162,14 +166,16 @@ class RemindersViewModel(
 
     fun snoozeReminder(reminderId: String, minutes: Int) {
         viewModelScope.launch {
+            notificationHelper.stopLoopingRingtone()
             reminderRepository.snoozeReminder(reminderId, minutes)
-            statusMessage.value = "Snoozed for $minutes minutes."
+            statusMessage.value = "Snoozed for $minutes minutes"
             refreshDiagnostics()
         }
     }
 
     fun markCompleted(reminderId: String) {
         viewModelScope.launch {
+            notificationHelper.stopLoopingRingtone()
             reminderRepository.markCompleted(reminderId)
             refreshDiagnostics()
         }
@@ -177,6 +183,7 @@ class RemindersViewModel(
 
     fun deleteReminder(reminderId: String) {
         viewModelScope.launch {
+            notificationHelper.stopLoopingRingtone()
             reminderRepository.deleteReminder(reminderId)
             refreshDiagnostics()
         }

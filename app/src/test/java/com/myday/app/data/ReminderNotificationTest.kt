@@ -322,5 +322,47 @@ class ReminderNotificationTest {
         val posted = Shadows.shadowOf(nm).allNotifications.first()
         assertEquals(NotificationChannels.REMINDERS_CHIME, posted.channelId)
         assertEquals(expectedUri, nm.getNotificationChannel(NotificationChannels.REMINDERS_CHIME)?.sound)
+        assertTrue((posted.flags and android.app.Notification.FLAG_INSISTENT) != 0)
+        assertNotNull(posted.deleteIntent)
+    }
+
+    @Test
+    fun `looping service notification uses ringing headsup channel and deleteIntent`() {
+        val now = System.currentTimeMillis()
+        val reminder = ReminderItem(
+            id = "rem_loop",
+            title = "Stand up",
+            notes = "Loop test",
+            scheduleType = ReminderScheduleType.ONE_TIME,
+            hour = 12,
+            minute = 0,
+            oneTimeEpochDay = null,
+            weekdays = emptySet(),
+            dayOfMonth = null,
+            intervalHours = null,
+            nextTriggerMillis = now + 60_000L,
+            isEnabled = true,
+            isCompleted = false,
+            snoozedUntilMillis = null,
+            playSound = true,
+            vibrate = true,
+            targetType = ReminderTargetType.STANDALONE,
+            targetId = null,
+            lastTriggeredMillis = null,
+            createdAtMillis = now,
+            updatedAtMillis = now
+        )
+
+        val built = notificationHelper.buildReminderNotification(
+            reminder = reminder,
+            soundEnabled = true,
+            vibrateEnabled = true,
+            snoozeMinutes = 10,
+            tone = ReminderTone.CHIME,
+            loopingHandledByService = true
+        )
+        assertEquals(NotificationChannels.REMINDERS_RINGING_HEADSUP, built.channelId)
+        assertNotNull(built.deleteIntent)
+        assertEquals(3, built.actions.size)
     }
 }

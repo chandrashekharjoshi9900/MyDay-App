@@ -1,15 +1,19 @@
 package com.myday.app.presentation.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,15 +31,16 @@ import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -55,11 +60,12 @@ import com.myday.app.presentation.components.CircularProgressRing
 import com.myday.app.presentation.components.EmptyStateCard
 import com.myday.app.presentation.components.LoadingStateView
 import com.myday.app.presentation.components.MyDayCard
+import com.myday.app.presentation.components.MyDayStatusDot
 import com.myday.app.presentation.components.SectionHeader
-import com.myday.app.presentation.components.StatusPill
 import com.myday.app.presentation.components.WeeklyProgressBarChart
 import com.myday.app.presentation.components.formatEpochDay
 import com.myday.app.presentation.components.formatTimeMinutes
+import com.myday.app.presentation.theme.MyDayMotion
 import com.myday.app.presentation.theme.MyDayPalette
 import com.myday.app.presentation.theme.MyDayThemeExtras
 import com.myday.app.presentation.theme.rememberMyDayHaptic
@@ -90,40 +96,48 @@ fun DashboardScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Greeting & Date
+        // Grounded Context Header
         item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "${state.greeting}, ${state.userName}",
+                        text = state.dateLabel,
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = state.dateLabel,
+                        text = "MYDAY • ${state.userName}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MyDayThemeExtras.colors.mutedText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                StatusPill(
-                    text = "MYDAY",
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MyDayStatusDot(color = MyDayThemeExtras.colors.success)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Offline",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MyDayThemeExtras.colors.mutedText
+                    )
+                }
             }
         }
 
-        // Daily Productivity Overview Card
+        // Asymmetric Daily Overview Card
         item {
             MyDayCard {
                 Row(
@@ -132,117 +146,117 @@ fun DashboardScreen(
                 ) {
                     CircularProgressRing(
                         progress = state.dailyOverviewPercent / 100f,
-                        size = 86.dp,
-                        strokeWidth = 8.dp,
+                        size = 80.dp,
+                        strokeWidth = 6.dp,
                         accentColor = if (state.dailyOverviewPercent >= 80) {
                             MyDayThemeExtras.colors.success
                         } else {
                             MaterialTheme.colorScheme.primary
                         }
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "${state.dailyOverviewPercent}%",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Today",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
                         Text(
-                            text = "Daily Overview",
-                            style = MaterialTheme.typography.titleMedium
+                            text = "${state.dailyOverviewPercent}%",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            MiniStatTile(
-                                icon = Icons.Rounded.Repeat,
-                                label = "Habits",
-                                value = "${state.habitsDoneToday}/${state.habitsScheduledToday}",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f)
-                            )
-                            MiniStatTile(
-                                icon = Icons.Rounded.CheckCircle,
-                                label = "Done",
-                                value = "${state.completedTasksToday.size}",
-                                tint = MyDayThemeExtras.colors.success,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            MiniStatTile(
-                                icon = Icons.Rounded.LocalFireDepartment,
-                                label = "Streak",
-                                value = "${state.currentStreak}d",
-                                tint = MyDayPalette.AmberWarning,
-                                modifier = Modifier.weight(1f)
-                            )
-                            MiniStatTile(
-                                icon = Icons.Rounded.Timer,
-                                label = "Focus",
-                                value = "${state.focusMinutesToday}m",
-                                tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
                     }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Daily completion",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MyDayThemeExtras.colors.mutedText
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val totalDone = state.habitsDoneToday + state.completedTasksToday.size
+                        val totalScheduled = state.habitsScheduledToday + state.completedTasksToday.size + state.pendingTasks.size
+                        Text(
+                            text = "$totalDone of $totalScheduled items",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${state.pendingTasks.size} pending tasks",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    MetricColumn(
+                        label = "Habits",
+                        value = "${state.habitsDoneToday}/${state.habitsScheduledToday}",
+                        modifier = Modifier.weight(1f)
+                    )
+                    VerticalDivider(
+                        modifier = Modifier.fillMaxHeight().padding(vertical = 4.dp),
+                        thickness = 1.dp,
+                        color = MyDayThemeExtras.colors.cardBorder
+                    )
+                    MetricColumn(
+                        label = "Streak",
+                        value = "${state.currentStreak}d",
+                        modifier = Modifier.weight(1f)
+                    )
+                    VerticalDivider(
+                        modifier = Modifier.fillMaxHeight().padding(vertical = 4.dp),
+                        thickness = 1.dp,
+                        color = MyDayThemeExtras.colors.cardBorder
+                    )
+                    MetricColumn(
+                        label = "Focus",
+                        value = "${state.focusMinutesToday}m",
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
 
-        // Quick-Add Actions
+        // Quiet Quick-Add Actions
         item {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(vertical = 4.dp)
                     .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 QuickActionChip(
                     icon = Icons.Rounded.Repeat,
-                    label = "Add Habit",
-                    tint = MaterialTheme.colorScheme.primary,
+                    label = "Habit",
                     onClick = onNavigateToHabits
                 )
                 QuickActionChip(
                     icon = Icons.Rounded.AddTask,
-                    label = "Add Task",
-                    tint = MaterialTheme.colorScheme.secondary,
+                    label = "Task",
                     onClick = onNavigateToTasks
                 )
                 QuickActionChip(
                     icon = Icons.Rounded.NotificationsActive,
                     label = "Reminder",
-                    tint = MyDayPalette.AmberWarning,
                     onClick = onNavigateToReminders
                 )
                 QuickActionChip(
                     icon = Icons.Rounded.Timer,
                     label = "Focus",
-                    tint = MyDayThemeExtras.colors.success,
                     onClick = onNavigateToFocus
                 )
                 QuickActionChip(
                     icon = Icons.Rounded.AutoStories,
                     label = "Journal",
-                    tint = Color(0xFFE879F9),
                     onClick = onNavigateToJournal
                 )
             }
@@ -250,14 +264,15 @@ fun DashboardScreen(
 
         // Today's Habits
         item {
+            Spacer(modifier = Modifier.height(4.dp))
             SectionHeader(
-                title = "Today's Habits",
+                title = "Today's habits",
                 subtitle = if (state.todayHabits.isEmpty()) {
                     "No habits scheduled today"
                 } else {
                     "${state.habitsDoneToday} of ${state.habitsScheduledToday} completed"
                 },
-                actionLabel = "All Habits",
+                actionLabel = "View all",
                 onActionClick = onNavigateToHabits
             )
         }
@@ -266,9 +281,9 @@ fun DashboardScreen(
             item {
                 EmptyStateCard(
                     icon = Icons.Rounded.Repeat,
-                    title = "Build your daily routine",
-                    message = "Create habits with daily or custom weekday schedules to track streaks.",
-                    actionLabel = "Create Habit",
+                    title = "No habits scheduled",
+                    message = "Add a daily or weekday habit to begin tracking streaks",
+                    actionLabel = "Add habit",
                     onAction = onNavigateToHabits
                 )
             }
@@ -284,8 +299,9 @@ fun DashboardScreen(
             }
         }
 
-        // Tasks (Pending & Completed Today)
+        // Tasks
         item {
+            Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
                 title = "Tasks",
                 subtitle = "${state.pendingTasks.size} pending • ${state.completedTasksToday.size} done today",
@@ -298,9 +314,9 @@ fun DashboardScreen(
             item {
                 EmptyStateCard(
                     icon = Icons.Rounded.CheckCircle,
-                    title = "All clear for now",
-                    message = "Add tasks with priorities, due dates, and optional background reminders.",
-                    actionLabel = "New Task",
+                    title = "No pending tasks",
+                    message = "Create tasks with due dates, recurrence, and reminders",
+                    actionLabel = "Add task",
                     onAction = onNavigateToTasks
                 )
             }
@@ -319,10 +335,11 @@ fun DashboardScreen(
 
         // Upcoming Reminders
         item {
+            Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
-                title = "Upcoming Reminders",
-                subtitle = "${state.upcomingReminders.size} active scheduled",
-                actionLabel = "Reminders",
+                title = "Upcoming reminders",
+                subtitle = "${state.upcomingReminders.size} active",
+                actionLabel = "Manage",
                 onActionClick = onNavigateToReminders
             )
         }
@@ -332,16 +349,19 @@ fun DashboardScreen(
                 EmptyStateCard(
                     icon = Icons.Rounded.Alarm,
                     title = "No upcoming reminders",
-                    message = "Schedule offline alarms that survive reboots and timezone changes.",
-                    actionLabel = "Set Reminder",
+                    message = "Schedule offline alarms that persist across reboots",
+                    actionLabel = "Set reminder",
                     onAction = onNavigateToReminders
                 )
             }
         } else {
             item {
                 MyDayCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        state.upcomingReminders.forEach { reminder ->
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        state.upcomingReminders.forEachIndexed { index, reminder ->
+                            if (index > 0) {
+                                HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                            }
                             DashboardReminderRow(
                                 reminder = reminder,
                                 onClick = onNavigateToReminders
@@ -352,10 +372,11 @@ fun DashboardScreen(
             }
         }
 
-        // Weekly Progress Chart
+        // Weekly Rhythm Chart
         item {
+            Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
-                title = "Weekly Progress",
+                title = "Weekly rhythm",
                 subtitle = "Last 7 days habit completion",
                 actionLabel = "Analytics",
                 onActionClick = onNavigateToProgress
@@ -366,7 +387,7 @@ fun DashboardScreen(
             MyDayCard {
                 if (state.weeklyTrend.isEmpty()) {
                     Text(
-                        text = "Complete habits or tasks to build your weekly progress trend.",
+                        text = "Complete habits or tasks to populate your 7-day trend",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -379,42 +400,26 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun MiniStatTile(
-    icon: ImageVector,
+private fun MetricColumn(
     label: String,
     value: String,
-    tint: Color,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        color = MyDayThemeExtras.colors.elevatedSurface
+    Column(
+        modifier = modifier.padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = tint,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Column {
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MyDayThemeExtras.colors.mutedText
+        )
     }
 }
 
@@ -422,26 +427,25 @@ private fun MiniStatTile(
 private fun QuickActionChip(
     icon: ImageVector,
     label: String,
-    tint: Color,
     onClick: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MyDayThemeExtras.colors.cardBorder),
+        border = BorderStroke(1.dp, MyDayThemeExtras.colors.cardBorder),
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = tint,
-                modifier = Modifier.size(18.dp)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -461,7 +465,8 @@ private fun DashboardHabitRow(
     val done = habitWithStats.stats.completedToday
     val accent = Color(habitWithStats.habit.colorHex)
     val circleColor by animateColorAsState(
-        targetValue = if (done) MyDayThemeExtras.colors.success else accent.copy(alpha = 0.2f),
+        targetValue = if (done) MyDayThemeExtras.colors.success else MaterialTheme.colorScheme.surfaceVariant,
+        animationSpec = tween(MyDayMotion.FAST_MS, easing = MyDayMotion.EaseOut),
         label = "habit_check"
     )
 
@@ -472,7 +477,7 @@ private fun DashboardHabitRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
                     .background(circleColor),
                 contentAlignment = Alignment.Center
@@ -482,15 +487,10 @@ private fun DashboardHabitRow(
                         imageVector = Icons.Rounded.Check,
                         contentDescription = "Completed",
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(accent)
-                    )
+                    MyDayStatusDot(color = accent, size = 8.dp)
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
@@ -498,7 +498,7 @@ private fun DashboardHabitRow(
                 Text(
                     text = habitWithStats.habit.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (done) MyDayThemeExtras.colors.mutedText else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -511,16 +511,14 @@ private fun DashboardHabitRow(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MyDayThemeExtras.colors.mutedText
                 )
             }
-            if (done) {
-                StatusPill(
-                    text = "Done",
-                    containerColor = MyDayThemeExtras.colors.successContainer,
-                    contentColor = MyDayThemeExtras.colors.success
-                )
-            }
+            Text(
+                text = if (done) "Done" else "Log",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (done) MyDayThemeExtras.colors.success else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -533,7 +531,7 @@ private fun DashboardTaskRow(
     val priorityColor = when (task.priority) {
         TaskPriority.HIGH -> MyDayPalette.CoralError
         TaskPriority.MEDIUM -> MyDayPalette.AmberWarning
-        TaskPriority.LOW -> MaterialTheme.colorScheme.secondary
+        TaskPriority.LOW -> MyDayThemeExtras.colors.mutedText
     }
 
     MyDayCard(onClick = onToggle) {
@@ -545,7 +543,7 @@ private fun DashboardTaskRow(
                 imageVector = if (task.isCompleted) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
                 contentDescription = if (task.isCompleted) "Completed" else "Pending",
                 tint = if (task.isCompleted) MyDayThemeExtras.colors.success else priorityColor,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -553,19 +551,19 @@ private fun DashboardTaskRow(
                     text = task.title,
                     style = MaterialTheme.typography.titleMedium,
                     textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                    color = if (task.isCompleted) MyDayThemeExtras.colors.mutedText else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 val meta = buildString {
                     append(task.priority.label)
                     task.dueEpochDay?.let { append(" • ${formatEpochDay(it)}") }
-                    task.dueTimeMinutes?.let { append(" at ${formatTimeMinutes(it)}") }
+                    task.dueTimeMinutes?.let { append(" • ${formatTimeMinutes(it)}") }
                 }
                 Text(
                     text = meta,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MyDayThemeExtras.colors.mutedText
                 )
             }
         }
@@ -585,18 +583,15 @@ private fun DashboardReminderRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Rounded.NotificationsActive,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
+        MyDayStatusDot(
+            color = if (reminder.snoozedUntilMillis != null) MyDayPalette.AmberWarning else MaterialTheme.colorScheme.primary
         )
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = reminder.title,
@@ -608,7 +603,7 @@ private fun DashboardReminderRow(
             Text(
                 text = if (reminder.snoozedUntilMillis != null) "Snoozed until $formatted" else "$formatted • ${reminder.scheduleType.label}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MyDayThemeExtras.colors.mutedText
             )
         }
     }

@@ -122,18 +122,19 @@ fun TasksScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                 Text(
-                    text = "Task Manager",
+                    text = "Tasks",
                     style = MaterialTheme.typography.headlineMedium
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${state.pendingCount} pending • ${state.completedCount} completed",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MyDayThemeExtras.colors.mutedText
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TaskFilterTab.entries.forEach { tab ->
@@ -187,7 +188,7 @@ fun TasksScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.tasks, key = { it.id }) { task ->

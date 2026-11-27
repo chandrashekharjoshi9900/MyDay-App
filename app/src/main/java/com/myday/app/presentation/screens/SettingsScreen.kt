@@ -116,7 +116,7 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Settings & Backup") },
+                title = { Text("Settings & backup") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -132,8 +132,8 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (state.isBusy) {
                 item {

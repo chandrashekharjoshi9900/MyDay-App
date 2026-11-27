@@ -1,5 +1,6 @@
 package com.myday.app.presentation.theme
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -19,41 +20,66 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Unslop-refined design tokens for MYDAY:
+ * - Graphite neutral ramp with quiet 8% hairlines
+ * - Three text roles: Primary, Secondary, Muted
+ * - Single primary violet accent + toned semantic indicators
+ * - 4dp spacing grid, tabular numerals, single ease-out motion curve
+ */
 object MyDayPalette {
     val VioletPrimary = Color(0xFF8E7CFF)
-    val VioletMuted = Color(0xFF282442)
+    val VioletPrimaryLight = Color(0xFF6350E8)
+    val VioletContainerDark = Color(0xFF232033)
+    val VioletContainerLight = Color(0xFFEDEAFE)
+
     val BlueSecondary = Color(0xFF5298FF)
-    val BlueMuted = Color(0xFF1D2D46)
-    val GreenSuccess = Color(0xFF2FD180)
-    val GreenMuted = Color(0xFF173628)
-    val AmberWarning = Color(0xFFF59E0B)
-    val CoralError = Color(0xFFF46472)
+    val BlueSecondaryLight = Color(0xFF2B6FD6)
+    val BlueContainerDark = Color(0xFF1A2230)
 
-    // Dark Charcoal surfaces
-    val CharcoalBackground = Color(0xFF0E1015)
-    val CharcoalSurface = Color(0xFF161922)
-    val CharcoalSurfaceElevated = Color(0xFF1E222E)
-    val CharcoalOutline = Color(0xFF2B3040)
-    val DarkTextPrimary = Color(0xFFF3F4F8)
-    val DarkTextSecondary = Color(0xFFA0A7BA)
+    val GreenSuccess = Color(0xFF4CC38A)
+    val GreenSuccessLight = Color(0xFF16A34A)
+    val GreenContainerDark = Color(0xFF172921)
+    val GreenContainerLight = Color(0xFFE7F7EE)
 
-    // Light surfaces
-    val LightBackground = Color(0xFFF5F6FA)
-    val LightSurface = Color(0xFFFFFFFF)
-    val LightSurfaceElevated = Color(0xFFECEFF6)
-    val LightOutline = Color(0xFFD8DEE9)
-    val LightTextPrimary = Color(0xFF121521)
-    val LightTextSecondary = Color(0xFF5D657A)
+    val AmberWarning = Color(0xFFE5A93B)
+    val CoralError = Color(0xFFE5484D)
+    val CoralErrorLight = Color(0xFFDC2626)
+
+    // Graphite Dark Ramp
+    val DarkDeepest = Color(0xFF0F0F10)
+    val DarkBackground = Color(0xFF141415)
+    val DarkCard = Color(0xFF19191B)
+    val DarkRaised = Color(0xFF232325)
+    val DarkTextPrimary = Color(0xFFEDEDED)
+    val DarkTextSecondary = Color(0xFFA1A1A6)
+    val DarkTextMuted = Color(0xFF85858B)
+    val DarkHairline = Color(0x14EDEDED) // 8% primary text
+
+    // Graphite Light Ramp
+    val LightBackground = Color(0xFFFAFAFA)
+    val LightCard = Color(0xFFFFFFFF)
+    val LightRaised = Color(0xFFF4F4F5)
+    val LightTextPrimary = Color(0xFF171717)
+    val LightTextSecondary = Color(0xFF525252)
+    val LightTextMuted = Color(0xFF737373)
+    val LightHairline = Color(0x14171717) // 8% primary text
 
     val AccentSwatches = listOf(
         0xFF8E7CFFL,
         0xFF5298FFL,
-        0xFF2FD180L,
-        0xFF38BDF8L,
-        0xFFF59E0BL,
-        0xFFF46472L,
-        0xFFE879F9L
+        0xFF4CC38AL,
+        0xFFE5A93BL,
+        0xFFE5484DL,
+        0xFF737373L
     )
+}
+
+object MyDayMotion {
+    val EaseOut = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
+    const val FAST_MS = 160
+    const val MEDIUM_MS = 240
+    const val CHART_MS = 360
 }
 
 data class MyDayExtendedColors(
@@ -62,16 +88,20 @@ data class MyDayExtendedColors(
     val warning: Color,
     val cardBorder: Color,
     val elevatedSurface: Color,
+    val navBarSurface: Color,
+    val mutedText: Color,
     val isDark: Boolean
 )
 
 private val LocalExtendedColors = staticCompositionLocalOf {
     MyDayExtendedColors(
         success = MyDayPalette.GreenSuccess,
-        successContainer = MyDayPalette.GreenMuted,
+        successContainer = MyDayPalette.GreenContainerDark,
         warning = MyDayPalette.AmberWarning,
-        cardBorder = MyDayPalette.CharcoalOutline,
-        elevatedSurface = MyDayPalette.CharcoalSurfaceElevated,
+        cardBorder = MyDayPalette.DarkHairline,
+        elevatedSurface = MyDayPalette.DarkRaised,
+        navBarSurface = MyDayPalette.DarkDeepest,
+        mutedText = MyDayPalette.DarkTextMuted,
         isDark = true
     )
 }
@@ -98,74 +128,75 @@ fun rememberMyDayHaptic(): () -> Unit {
 
 private val DarkColors = darkColorScheme(
     primary = MyDayPalette.VioletPrimary,
-    onPrimary = Color(0xFF120D29),
-    primaryContainer = MyDayPalette.VioletMuted,
-    onPrimaryContainer = Color(0xFFE6E1FF),
+    onPrimary = Color(0xFF100E1B),
+    primaryContainer = MyDayPalette.VioletContainerDark,
+    onPrimaryContainer = Color(0xFFE5E1FF),
     secondary = MyDayPalette.BlueSecondary,
-    onSecondary = Color(0xFF0A1D38),
-    secondaryContainer = MyDayPalette.BlueMuted,
-    onSecondaryContainer = Color(0xFFD8E8FF),
+    onSecondary = Color(0xFF0A172B),
+    secondaryContainer = MyDayPalette.BlueContainerDark,
+    onSecondaryContainer = Color(0xFFDCE8FA),
     tertiary = MyDayPalette.GreenSuccess,
-    onTertiary = Color(0xFF062615),
-    tertiaryContainer = MyDayPalette.GreenMuted,
-    onTertiaryContainer = Color(0xFFC5F9DC),
-    background = MyDayPalette.CharcoalBackground,
+    onTertiary = Color(0xFF072115),
+    tertiaryContainer = MyDayPalette.GreenContainerDark,
+    onTertiaryContainer = Color(0xFFCFF5DF),
+    background = MyDayPalette.DarkBackground,
     onBackground = MyDayPalette.DarkTextPrimary,
-    surface = MyDayPalette.CharcoalSurface,
+    surface = MyDayPalette.DarkCard,
     onSurface = MyDayPalette.DarkTextPrimary,
-    surfaceVariant = MyDayPalette.CharcoalSurfaceElevated,
+    surfaceVariant = MyDayPalette.DarkRaised,
     onSurfaceVariant = MyDayPalette.DarkTextSecondary,
-    outline = MyDayPalette.CharcoalOutline,
-    outlineVariant = Color(0xFF222634),
+    outline = MyDayPalette.DarkHairline,
+    outlineVariant = MyDayPalette.DarkHairline,
     error = MyDayPalette.CoralError,
-    onError = Color(0xFF2A090E)
+    onError = Color(0xFF280A0C)
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF6B56F5),
+    primary = MyDayPalette.VioletPrimaryLight,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFECE9FF),
-    onPrimaryContainer = Color(0xFF23176B),
-    secondary = Color(0xFF2C7BE5),
+    primaryContainer = MyDayPalette.VioletContainerLight,
+    onPrimaryContainer = Color(0xFF221866),
+    secondary = MyDayPalette.BlueSecondaryLight,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE1EEFF),
-    onSecondaryContainer = Color(0xFF0E2C57),
-    tertiary = Color(0xFF18A962),
+    secondaryContainer = Color(0xFFE7EFFC),
+    onSecondaryContainer = Color(0xFF0F2B56),
+    tertiary = MyDayPalette.GreenSuccessLight,
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFD9F7E7),
-    onTertiaryContainer = Color(0xFF083820),
+    tertiaryContainer = MyDayPalette.GreenContainerLight,
+    onTertiaryContainer = Color(0xFF0A361F),
     background = MyDayPalette.LightBackground,
     onBackground = MyDayPalette.LightTextPrimary,
-    surface = MyDayPalette.LightSurface,
+    surface = MyDayPalette.LightCard,
     onSurface = MyDayPalette.LightTextPrimary,
-    surfaceVariant = MyDayPalette.LightSurfaceElevated,
+    surfaceVariant = MyDayPalette.LightRaised,
     onSurfaceVariant = MyDayPalette.LightTextSecondary,
-    outline = MyDayPalette.LightOutline,
-    outlineVariant = Color(0xFFE5E9F2),
-    error = Color(0xFFD93F50),
+    outline = MyDayPalette.LightHairline,
+    outlineVariant = MyDayPalette.LightHairline,
+    error = MyDayPalette.CoralErrorLight,
     onError = Color.White
 )
 
 private val MyDayTypography = Typography(
     headlineLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = (-0.5).sp
+        fontWeight = FontWeight.Medium,
+        fontSize = 32.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.6).sp,
+        fontFeatureSettings = "tnum"
     ),
     headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 24.sp,
         lineHeight = 28.sp,
-        letterSpacing = (-0.25).sp
+        letterSpacing = (-0.3).sp
     ),
     titleLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp,
         lineHeight = 24.sp
     ),
     titleMedium = TextStyle(
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 22.sp
     ),
@@ -176,31 +207,35 @@ private val MyDayTypography = Typography(
     ),
     bodyMedium = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 13.5.sp,
+        fontSize = 13.sp,
         lineHeight = 20.sp
     ),
     labelLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
-    ),
-    labelMedium = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 11.5.sp,
+        fontSize = 13.sp,
         lineHeight = 16.sp
     ),
+    labelMedium = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.1.sp,
+        fontFeatureSettings = "tnum"
+    ),
     labelSmall = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 10.5.sp,
-        lineHeight = 14.sp
+        fontWeight = FontWeight.Normal,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.15.sp,
+        fontFeatureSettings = "tnum"
     )
 )
 
 private val MyDayShapes = Shapes(
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(20.dp),
-    extraLarge = RoundedCornerShape(28.dp)
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(20.dp)
 )
 
 @Composable
@@ -213,19 +248,23 @@ fun MyDayTheme(
     val extended = if (darkTheme) {
         MyDayExtendedColors(
             success = MyDayPalette.GreenSuccess,
-            successContainer = MyDayPalette.GreenMuted,
+            successContainer = MyDayPalette.GreenContainerDark,
             warning = MyDayPalette.AmberWarning,
-            cardBorder = MyDayPalette.CharcoalOutline,
-            elevatedSurface = MyDayPalette.CharcoalSurfaceElevated,
+            cardBorder = MyDayPalette.DarkHairline,
+            elevatedSurface = MyDayPalette.DarkRaised,
+            navBarSurface = MyDayPalette.DarkDeepest,
+            mutedText = MyDayPalette.DarkTextMuted,
             isDark = true
         )
     } else {
         MyDayExtendedColors(
-            success = Color(0xFF18A962),
-            successContainer = Color(0xFFD9F7E7),
+            success = MyDayPalette.GreenSuccessLight,
+            successContainer = MyDayPalette.GreenContainerLight,
             warning = Color(0xFFD97706),
-            cardBorder = MyDayPalette.LightOutline,
-            elevatedSurface = MyDayPalette.LightSurfaceElevated,
+            cardBorder = MyDayPalette.LightHairline,
+            elevatedSurface = MyDayPalette.LightRaised,
+            navBarSurface = MyDayPalette.LightCard,
+            mutedText = MyDayPalette.LightTextMuted,
             isDark = false
         )
     }

@@ -85,7 +85,7 @@ fun JournalScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Daily Journal") },
+                title = { Text("Journal") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -118,11 +118,11 @@ fun JournalScreen(
                 value = state.searchQuery,
                 onValueChange = onSearchChange,
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                placeholder = { Text("Search notes, achievements, reflections...") },
+                placeholder = { Text("Search") },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             )
 
             if (state.isLoading) {
@@ -140,7 +140,7 @@ fun JournalScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.entries, key = { it.id }) { entry ->

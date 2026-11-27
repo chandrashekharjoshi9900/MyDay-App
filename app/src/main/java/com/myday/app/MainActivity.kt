@@ -1,6 +1,7 @@
 package com.myday.app
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.myday.app.data.reminder.ReminderSoundService
 import com.myday.app.presentation.MyDayApp
 
 class MainActivity : ComponentActivity() {
@@ -21,6 +23,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ReminderSoundService.stop(this)
         enableEdgeToEdge()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(
@@ -35,5 +38,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyDayApp(container = container)
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        ReminderSoundService.stop(this)
     }
 }

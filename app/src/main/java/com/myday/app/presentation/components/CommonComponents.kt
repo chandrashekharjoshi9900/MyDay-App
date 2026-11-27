@@ -29,13 +29,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Keyboard
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,8 +51,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,9 +64,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.myday.app.domain.model.CategoryItem
 import com.myday.app.domain.model.DayActivitySummary
 import com.myday.app.domain.model.TrendPoint
+import com.myday.app.presentation.theme.MyDayMotion
 import com.myday.app.presentation.theme.MyDayPalette
 import com.myday.app.presentation.theme.MyDayThemeExtras
 import com.myday.app.presentation.theme.rememberMyDayHaptic
@@ -85,7 +86,7 @@ fun MyDayCard(
     borderColor: Color = MyDayThemeExtras.colors.cardBorder,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(16.dp)
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -111,7 +112,9 @@ fun SectionHeader(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -122,10 +125,11 @@ fun SectionHeader(
                 color = MaterialTheme.colorScheme.onBackground
             )
             if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MyDayThemeExtras.colors.mutedText
                 )
             }
         }
@@ -134,11 +138,28 @@ fun SectionHeader(
                 Text(
                     text = actionLabel,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
     }
+}
+
+/**
+ * MYDAY signature status dot + quiet label.
+ */
+@Composable
+fun MyDayStatusDot(
+    color: Color,
+    size: Dp = 6.dp,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(color)
+    )
 }
 
 @Composable
@@ -150,7 +171,7 @@ fun StatusPill(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(50),
+        shape = RoundedCornerShape(8.dp),
         color = containerColor
     ) {
         Text(
@@ -159,7 +180,7 @@ fun StatusPill(
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
 }
@@ -177,37 +198,31 @@ fun EmptyStateCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.Start
         ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(26.dp)
+                    tint = MyDayThemeExtras.colors.mutedText,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (actionLabel != null && onAction != null) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 TextButton(onClick = onAction) {
                     Text(actionLabel)
                 }
@@ -224,7 +239,10 @@ fun LoadingStateView(modifier: Modifier = Modifier) {
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 2.5.dp
+        )
     }
 }
 
@@ -232,14 +250,14 @@ fun LoadingStateView(modifier: Modifier = Modifier) {
 fun CircularProgressRing(
     progress: Float,
     size: Dp = 84.dp,
-    strokeWidth: Dp = 8.dp,
+    strokeWidth: Dp = 6.dp,
     accentColor: Color = MaterialTheme.colorScheme.primary,
     trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     centerContent: @Composable () -> Unit
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 550),
+        animationSpec = tween(durationMillis = MyDayMotion.CHART_MS, easing = MyDayMotion.EaseOut),
         label = "ring_progress"
     )
     Box(
@@ -275,60 +293,99 @@ fun CircularProgressRing(
     }
 }
 
+/**
+ * Unslop Moment #1: Single-accent rhythm bar chart with muted horizontal gridlines
+ * and tabular percentage readout. Past days stay in quiet neutral graphite while
+ * today (or full completion) carries the accent.
+ */
 @Composable
 fun WeeklyProgressBarChart(
     points: List<TrendPoint>,
     modifier: Modifier = Modifier,
-    barColor: Color = MaterialTheme.colorScheme.primary,
-    secondaryColor: Color = MaterialTheme.colorScheme.secondary
+    barColor: Color = MaterialTheme.colorScheme.primary
 ) {
+    val today = LocalDate.now()
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Bottom
-    ) {
-        points.forEach { point ->
-            val ratio = point.habitRate.coerceIn(0f, 1f)
-            val animatedHeight by animateFloatAsState(
-                targetValue = ratio,
-                animationSpec = tween(450),
-                label = "bar_${point.label}"
-            )
+    val hairlineColor = MyDayThemeExtras.colors.cardBorder
+    val mutedColor = MyDayThemeExtras.colors.mutedText
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(104.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "${(ratio * 100).toInt()}%",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .width(20.dp)
-                        .height(82.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(trackColor),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    val fillFraction = if (animatedHeight > 0f) animatedHeight.coerceAtLeast(0.08f) else 0f
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height((82f * fillFraction).dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (ratio >= 0.8f) MyDayThemeExtras.colors.success else if (ratio >= 0.4f) barColor else secondaryColor)
+                HorizontalDivider(thickness = 1.dp, color = hairlineColor)
+                HorizontalDivider(thickness = 1.dp, color = hairlineColor)
+                HorizontalDivider(thickness = 1.dp, color = hairlineColor)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                points.forEach { point ->
+                    val ratio = point.habitRate.coerceIn(0f, 1f)
+                    val animatedHeight by animateFloatAsState(
+                        targetValue = ratio,
+                        animationSpec = tween(MyDayMotion.CHART_MS, easing = MyDayMotion.EaseOut),
+                        label = "bar_${point.label}"
                     )
+                    val isToday = point.date == today
+                    val fillColor = when {
+                        isToday -> barColor
+                        ratio >= 0.99f -> MyDayThemeExtras.colors.success.copy(alpha = 0.78f)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f)
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(104.dp)
+                                .padding(horizontal = 4.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(16.dp)
+                                    .height(104.dp)
+                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(trackColor.copy(alpha = 0.35f)),
+                                contentAlignment = Alignment.BottomCenter
+                            ) {
+                                val barHeight = if (animatedHeight > 0f) {
+                                    (104f * animatedHeight).coerceAtLeast(4f)
+                                } else {
+                                    0f
+                                }
+                                if (barHeight > 0f) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(barHeight.dp)
+                                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                            .background(fillColor)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = point.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isToday) MaterialTheme.colorScheme.onSurface else mutedColor,
+                            fontWeight = if (isToday) FontWeight.Medium else FontWeight.Normal,
+                            maxLines = 1
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = point.label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
             }
         }
     }
@@ -341,22 +398,22 @@ fun CalendarHeatmapGrid(
 ) {
     val weeks = days.chunked(7)
     val baseTrack = MaterialTheme.colorScheme.surfaceVariant
-    val successColor = MyDayThemeExtras.colors.success
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val accent = MaterialTheme.colorScheme.primary
+    val mutedText = MyDayThemeExtras.colors.mutedText
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         weeks.forEach { week ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 week.forEach { day ->
                     val cellColor = when {
                         day.completionRatio == null && day.focusMinutes == 0 && !day.hasJournalEntry -> baseTrack
-                        day.intensity >= 0.8f -> successColor
-                        day.intensity >= 0.5f -> primaryColor
-                        day.intensity >= 0.25f -> primaryColor.copy(alpha = 0.55f)
-                        day.intensity > 0f -> primaryColor.copy(alpha = 0.28f)
+                        day.intensity >= 0.8f -> accent
+                        day.intensity >= 0.5f -> accent.copy(alpha = 0.65f)
+                        day.intensity >= 0.25f -> accent.copy(alpha = 0.38f)
+                        day.intensity > 0f -> accent.copy(alpha = 0.20f)
                         else -> baseTrack
                     }
                     Box(
@@ -370,7 +427,7 @@ fun CalendarHeatmapGrid(
                         Text(
                             text = day.date.dayOfMonth.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (day.intensity >= 0.45f) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (day.intensity >= 0.5f) MaterialTheme.colorScheme.onPrimary else mutedText
                         )
                     }
                 }
@@ -387,16 +444,16 @@ fun CalendarHeatmapGrid(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Rest / Low",
+                text = "Rest",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = mutedText
             )
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             listOf(
                 baseTrack,
-                primaryColor.copy(alpha = 0.28f),
-                primaryColor.copy(alpha = 0.6f),
-                successColor
+                accent.copy(alpha = 0.24f),
+                accent.copy(alpha = 0.56f),
+                accent
             ).forEach { color ->
                 Box(
                     modifier = Modifier
@@ -407,9 +464,9 @@ fun CalendarHeatmapGrid(
                 Spacer(modifier = Modifier.width(4.dp))
             }
             Text(
-                text = "Peak",
+                text = "Full",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = mutedText
             )
         }
     }
@@ -433,12 +490,13 @@ fun WeekdaySelectorRow(
     )
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         days.forEach { (dayInt, label) ->
             val selected = selectedWeekdays.contains(dayInt)
             val bg by animateColorAsState(
                 targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                animationSpec = tween(MyDayMotion.FAST_MS, easing = MyDayMotion.EaseOut),
                 label = "day_bg_$dayInt"
             )
             val fg = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -446,7 +504,7 @@ fun WeekdaySelectorRow(
                 modifier = Modifier
                     .weight(1f)
                     .height(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(bg)
                     .clickable {
                         haptic()
@@ -457,7 +515,6 @@ fun WeekdaySelectorRow(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
                     color = fg
                 )
             }
@@ -481,7 +538,7 @@ fun CategorySelectorRow(
         FilterChip(
             selected = selectedCategoryId == null,
             onClick = { onSelectCategory(null) },
-            label = { Text("All / None") }
+            label = { Text("None") }
         )
         categories.forEach { category ->
             FilterChip(
@@ -489,12 +546,7 @@ fun CategorySelectorRow(
                 onClick = { onSelectCategory(category.id) },
                 label = { Text(category.name) },
                 leadingIcon = {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(Color(category.colorHex))
-                    )
+                    MyDayStatusDot(color = Color(category.colorHex), size = 8.dp)
                 },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
@@ -512,18 +564,18 @@ fun ColorPickerRow(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         MyDayPalette.AccentSwatches.forEach { hex ->
             val selected = hex == selectedColorHex
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(Color(hex))
                     .then(
                         if (selected) {
-                            Modifier.border(2.5.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                         } else {
                             Modifier
                         }
@@ -557,9 +609,10 @@ fun MyDayTimePickerDialog(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .widthIn(max = 380.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+            border = BorderStroke(1.dp, MyDayThemeExtras.colors.cardBorder),
+            tonalElevation = 0.dp
         ) {
             Column(
                 modifier = Modifier
@@ -574,7 +627,7 @@ fun MyDayTimePickerDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Select Time",
+                            text = "Select time",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -611,7 +664,7 @@ fun MyDayTimePickerDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
-                        Text("Set Time")
+                        Text("Set time")
                     }
                 }
             }

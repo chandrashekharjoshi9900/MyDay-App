@@ -110,7 +110,7 @@ fun GoalsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Goals & Milestones") },
+                title = { Text("Goals & milestones") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -175,7 +175,7 @@ fun GoalsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.goals, key = { it.goal.id }) { item ->
@@ -370,7 +370,7 @@ private fun GoalCard(
             OutlinedTextField(
                 value = newMilestoneText,
                 onValueChange = { newMilestoneText = it },
-                placeholder = { Text("Add milestone...") },
+                placeholder = { Text("Add milestone") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
             )

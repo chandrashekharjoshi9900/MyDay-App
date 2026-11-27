@@ -9,24 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoGraph
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.LocalFireDepartment
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.myday.app.domain.model.AnalyticsPeriod
 import com.myday.app.presentation.components.CalendarHeatmapGrid
@@ -34,7 +23,6 @@ import com.myday.app.presentation.components.LoadingStateView
 import com.myday.app.presentation.components.MyDayCard
 import com.myday.app.presentation.components.SectionHeader
 import com.myday.app.presentation.components.WeeklyProgressBarChart
-import com.myday.app.presentation.theme.MyDayPalette
 import com.myday.app.presentation.theme.MyDayThemeExtras
 import com.myday.app.presentation.viewmodel.ProgressUiState
 import java.time.format.DateTimeFormatter
@@ -56,21 +44,22 @@ fun ProgressScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Column {
+            Column(modifier = Modifier.padding(bottom = 4.dp)) {
                 Text(
-                    text = "Progress Analytics",
+                    text = "Progress",
                     style = MaterialTheme.typography.headlineMedium
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${report.startDate.format(dateFmt)} – ${report.endDate.format(dateFmt)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MyDayThemeExtras.colors.mutedText
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AnalyticsPeriod.entries.forEach { period ->
                         FilterChip(
@@ -83,31 +72,27 @@ fun ProgressScreen(
             }
         }
 
-        // Key Metric Cards
+        // Numbers-only compact stat cards (no decorative icons inside stat cards)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 AnalyticsMetricCard(
-                    icon = Icons.Rounded.Repeat,
-                    title = "Habit Rate",
+                    title = "Habit rate",
                     value = report.habitCompletionRate?.let { "${(it * 100).roundToInt()}%" } ?: "Rest",
                     subtitle = if (report.scheduledHabitSlots > 0) {
                         "${report.completedHabitSlots}/${report.scheduledHabitSlots} slots"
                     } else {
                         "No scheduled habits"
                     },
-                    accent = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 AnalyticsMetricCard(
-                    icon = Icons.Rounded.CheckCircle,
-                    title = "Tasks Done",
+                    title = "Tasks done",
                     value = report.tasksCompleted.toString(),
                     subtitle = report.taskCompletionRate?.let { "${(it * 100).roundToInt()}% rate • ${report.tasksOverdue} overdue" }
                         ?: "${report.tasksPending} pending",
-                    accent = MyDayThemeExtras.colors.success,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -119,32 +104,29 @@ fun ProgressScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 AnalyticsMetricCard(
-                    icon = Icons.Rounded.LocalFireDepartment,
-                    title = "Streaks",
+                    title = "Active streak",
                     value = "${report.activeCurrentStreak}d",
-                    subtitle = "Best streak: ${report.bestLongestStreak} days",
-                    accent = MyDayPalette.AmberWarning,
+                    subtitle = "Best: ${report.bestLongestStreak} days",
                     modifier = Modifier.weight(1f)
                 )
                 AnalyticsMetricCard(
-                    icon = Icons.Rounded.Timer,
-                    title = "Focus Time",
+                    title = "Focus time",
                     value = "${report.totalFocusMinutes}m",
                     subtitle = "${report.totalFocusSessions} sessions • ${report.journalEntriesCount} notes",
-                    accent = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // Productivity Trend
+        // Primary Productivity Trend Chart
         item {
+            Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
-                title = "Productivity Trend",
+                title = "Productivity trend",
                 subtitle = if (report.restDaysCount > 0) {
-                    "${report.restDaysCount} rest day(s) without scheduled tasks/habits excluded from penalties"
+                    "${report.restDaysCount} rest days excluded from penalty"
                 } else {
-                    "Habit completion rate over selected range"
+                    "Habit completion rate"
                 }
             )
         }
@@ -158,7 +140,7 @@ fun ProgressScreen(
                 }
                 if (pointsToShow.isEmpty()) {
                     Text(
-                        text = "No activity data recorded in this period yet.",
+                        text = "No activity data recorded in this period",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -168,11 +150,12 @@ fun ProgressScreen(
             }
         }
 
-        // Calendar Heatmap
+        // 35-Day Heatmap
         item {
+            Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
-                title = "35-Day Activity Heatmap",
-                subtitle = "Combines habits, tasks, focus sessions, and journal entries"
+                title = "35-day activity",
+                subtitle = "Habits, tasks, focus, and journal entries"
             )
         }
 
@@ -182,25 +165,31 @@ fun ProgressScreen(
             }
         }
 
-        // Transparent Breakdown Card
+        // Transparent Calculation Summary
         item {
+            Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
-                title = "Transparent Calculation Summary",
+                title = "Breakdown",
                 subtitle = "Exact counts from local SQLite records"
             )
         }
 
         item {
             MyDayCard {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     SummaryLine("Scheduled habit check-ins", "${report.scheduledHabitSlots}")
+                    HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
                     SummaryLine("Completed habit check-ins", "${report.completedHabitSlots}")
-                    SummaryLine("Tasks completed in period", "${report.tasksCompleted}")
-                    SummaryLine("Tasks currently pending", "${report.tasksPending}")
-                    SummaryLine("Overdue pending tasks", "${report.tasksOverdue}")
-                    SummaryLine("Completed focus minutes", "${report.totalFocusMinutes} min (${report.totalFocusSessions} sessions)")
-                    SummaryLine("Journal entries in period", "${report.journalEntriesCount}")
-                    SummaryLine("Rest / unscheduled days", "${report.restDaysCount}")
+                    HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                    SummaryLine("Tasks completed", "${report.tasksCompleted}")
+                    HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                    SummaryLine("Tasks pending", "${report.tasksPending} (${report.tasksOverdue} overdue)")
+                    HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                    SummaryLine("Focus sessions", "${report.totalFocusMinutes} min (${report.totalFocusSessions})")
+                    HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                    SummaryLine("Journal entries", "${report.journalEntriesCount}")
+                    HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                    SummaryLine("Unscheduled rest days", "${report.restDaysCount}")
                 }
             }
         }
@@ -209,33 +198,27 @@ fun ProgressScreen(
 
 @Composable
 private fun AnalyticsMetricCard(
-    icon: ImageVector,
     title: String,
     value: String,
     subtitle: String,
-    accent: Color,
     modifier: Modifier = Modifier
 ) {
     MyDayCard(modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(imageVector = icon, contentDescription = title, tint = accent)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MyDayThemeExtras.colors.mutedText
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -254,8 +237,7 @@ private fun SummaryLine(label: String, value: String) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
     }

@@ -1,7 +1,9 @@
 package com.myday.app.presentation
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -13,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.myday.app.presentation.theme.MyDayThemeExtras
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -80,30 +83,33 @@ fun MyDayApp(container: AppContainer) {
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 if (showBottomBar) {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 0.dp
-                    ) {
-                        TopLevelDestination.entries.forEach { dest ->
-                            val selected = currentRoute == dest.route
-                            NavigationBarItem(
-                                selected = selected,
-                                onClick = { navigateTopLevel(dest.route) },
-                                icon = {
-                                    Icon(
-                                        imageVector = dest.icon,
-                                        contentDescription = dest.label
+                    Column {
+                        HorizontalDivider(thickness = 1.dp, color = MyDayThemeExtras.colors.cardBorder)
+                        NavigationBar(
+                            containerColor = MyDayThemeExtras.colors.navBarSurface,
+                            tonalElevation = 0.dp
+                        ) {
+                            TopLevelDestination.entries.forEach { dest ->
+                                val selected = currentRoute == dest.route
+                                NavigationBarItem(
+                                    selected = selected,
+                                    onClick = { navigateTopLevel(dest.route) },
+                                    icon = {
+                                        Icon(
+                                            imageVector = dest.icon,
+                                            contentDescription = dest.label
+                                        )
+                                    },
+                                    label = { Text(dest.label, style = MaterialTheme.typography.labelMedium) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        unselectedIconColor = MyDayThemeExtras.colors.mutedText,
+                                        unselectedTextColor = MyDayThemeExtras.colors.mutedText
                                     )
-                                },
-                                label = { Text(dest.label) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            )
+                            }
                         }
                     }
                 }

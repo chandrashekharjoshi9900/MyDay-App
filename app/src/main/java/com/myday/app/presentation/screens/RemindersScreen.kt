@@ -152,7 +152,7 @@ fun RemindersScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Reminders & Diagnostics") },
+                title = { Text("Reminders & diagnostics") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -185,7 +185,7 @@ fun RemindersScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Notification Diagnostics & Permission Guidance

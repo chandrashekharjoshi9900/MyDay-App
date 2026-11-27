@@ -13,6 +13,14 @@ class ReminderActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getStringExtra(NotificationHelper.EXTRA_REMINDER_ID) ?: return
         val action = intent.action ?: return
+
+        // Always stop looping ringtone immediately when the user interacts with or swipes the notification
+        ReminderSoundService.stop(context)
+
+        if (action == ACTION_SILENCE) {
+            return
+        }
+
         val pendingResult = goAsync()
         val app = context.applicationContext as MyDayApplication
         val container = app.container
@@ -22,15 +30,21 @@ class ReminderActionReceiver : BroadcastReceiver() {
                 when (action) {
                     ACTION_SNOOZE -> {
                         val snoozeMinutes = intent.getIntExtra(NotificationHelper.EXTRA_SNOOZE_MINUTES, 10)
-                        container.reminderRepository.snoozeReminder(reminderId, snoozeMinutes)
+                        if (reminderId != NotificationHelper.TEST_REMINDER_ID) {
+                            container.reminderRepository.snoozeReminder(reminderId, snoozeMinutes)
+                        }
                         container.notificationHelper.cancelNotification(reminderId)
                     }
                     ACTION_COMPLETE -> {
-                        container.reminderRepository.markCompleted(reminderId)
+                        if (reminderId != NotificationHelper.TEST_REMINDER_ID) {
+                            container.reminderRepository.markCompleted(reminderId)
+                        }
                         container.notificationHelper.cancelNotification(reminderId)
                     }
                     ACTION_DISMISS -> {
-                        container.reminderRepository.dismissCurrentOccurrence(reminderId)
+                        if (reminderId != NotificationHelper.TEST_REMINDER_ID) {
+                            container.reminderRepository.dismissCurrentOccurrence(reminderId)
+                        }
                         container.notificationHelper.cancelNotification(reminderId)
                     }
                 }
@@ -44,5 +58,6 @@ class ReminderActionReceiver : BroadcastReceiver() {
         const val ACTION_SNOOZE = "com.myday.app.REMINDER_ACTION_SNOOZE"
         const val ACTION_COMPLETE = "com.myday.app.REMINDER_ACTION_COMPLETE"
         const val ACTION_DISMISS = "com.myday.app.REMINDER_ACTION_DISMISS"
+        const val ACTION_SILENCE = "com.myday.app.REMINDER_ACTION_SILENCE"
     }
 }

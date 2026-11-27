@@ -1,6 +1,7 @@
 package com.myday.app.data.reminder
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -25,6 +26,7 @@ object NotificationChannels {
     const val REMINDERS_SYSTEM_NOTIF = "myday_reminders_sys_notif_v2"
     const val REMINDERS_ALARM = "myday_reminders_alarm_v2"
     const val REMINDERS_SILENT = "myday_reminders_silent_v2"
+    const val REMINDERS_RINGING_HEADSUP = "myday_reminders_ringing_v3"
     const val FOCUS_TIMER = "myday_focus_timer_v2"
 
     fun channelIdFor(soundEnabled: Boolean, tone: ReminderTone): String {
@@ -120,6 +122,17 @@ class NotificationHelper(private val context: Context) {
             enableVibration(true)
         }
 
+        // High-importance visual channel used while ReminderSoundService loops the ringtone
+        val ringingHeadsUpChannel = NotificationChannel(
+            NotificationChannels.REMINDERS_RINGING_HEADSUP,
+            "Active Ringing Reminders",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Heads-up display for reminders whose ringtone loops until dismissed"
+            setSound(null, null)
+            enableVibration(false)
+        }
+
         val focusChannel = NotificationChannel(
             NotificationChannels.FOCUS_TIMER,
             "Focus Timer",
@@ -138,7 +151,14 @@ class NotificationHelper(private val context: Context) {
         }
 
         manager.createNotificationChannels(
-            listOf(chimeChannel, sysNotifChannel, alarmChannel, silentChannel, focusChannel)
+            listOf(
+                chimeChannel,
+                sysNotifChannel,
+                alarmChannel,
+                silentChannel,
+                ringingHeadsUpChannel,
+                focusChannel
+            )
         )
     }
 
@@ -178,19 +198,28 @@ class NotificationHelper(private val context: Context) {
         }.getOrDefault(false)
     }
 
-    fun showReminderNotification(
+    fun stopPreviewTone() {
+        runCatching { activePreviewRingtone?.stop() }
+        activePreviewRingtone = null
+    }
+
+    fun buildReminderNotification(
         reminder: ReminderItem,
         soundEnabled: Boolean,
         vibrateEnabled: Boolean,
         snoozeMinutes: Int,
-        tone: ReminderTone = ReminderTone.CHIME
-    ) {
-        if (!hasNotificationPermission()) return
+        tone: ReminderTone = ReminderTone.CHIME,
+        loopingHandledByService: Boolean = false
+    ): Notification {
         ensureChannels()
 
         val notificationId = notificationIdFor(reminder.id)
         val useSound = soundEnabled && reminder.playSound
-        val channelId = NotificationChannels.channelIdFor(useSound, tone)
+        val channelId = if (loopingHandledByService) {
+            NotificationChannels.REMINDERS_RINGING_HEADSUP
+        } else {
+            NotificationChannels.channelIdFor(useSound, tone)
+        }
 
         val openAppIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -237,36 +266,71 @@ class NotificationHelper(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val silenceIntent = Intent(context, ReminderActionReceiver::class.java).apply {
+            action = ReminderActionReceiver.ACTION_SILENCE
+            putExtra(EXTRA_REMINDER_ID, reminder.id)
+        }
+        val silencePendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId + 40_000,
+            silenceIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(reminder.title)
             .setContentText(reminder.notes.ifBlank { "Scheduled reminder • MYDAY" })
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(reminder.notes.ifBlank { "Tap to open MYDAY or take quick action below." })
+                    .bigText(reminder.notes.ifBlank { "Tap to open MYDAY or take quick action below" })
             )
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setDefaults(NotificationCompat.DEFAULT_LIGHTS)
             .setAutoCancel(true)
             .setContentIntent(contentPendingIntent)
+            .setDeleteIntent(silencePendingIntent)
             .addAction(0, "Complete", completePendingIntent)
             .addAction(0, "Snooze ${snoozeMinutes}m", snoozePendingIntent)
             .addAction(0, "Dismiss", dismissPendingIntent)
 
-        if (useSound) {
+        if (useSound && !loopingHandledByService) {
             builder.setSound(soundUriFor(tone))
         }
 
-        if (!vibrateEnabled || !reminder.vibrate) {
+        if (!vibrateEnabled || !reminder.vibrate || loopingHandledByService) {
             builder.setVibrate(longArrayOf(0L))
         } else {
             builder.setVibrate(longArrayOf(0L, 250L, 150L, 250L))
         }
 
+        val built = builder.build()
+        if (useSound) {
+            built.flags = built.flags or Notification.FLAG_INSISTENT
+        }
+        return built
+    }
+
+    fun showReminderNotification(
+        reminder: ReminderItem,
+        soundEnabled: Boolean,
+        vibrateEnabled: Boolean,
+        snoozeMinutes: Int,
+        tone: ReminderTone = ReminderTone.CHIME
+    ) {
+        if (!hasNotificationPermission()) return
+        val notification = buildReminderNotification(
+            reminder = reminder,
+            soundEnabled = soundEnabled,
+            vibrateEnabled = vibrateEnabled,
+            snoozeMinutes = snoozeMinutes,
+            tone = tone,
+            loopingHandledByService = false
+        )
         try {
-            NotificationManagerCompat.from(context).notify(notificationId, builder.build())
+            NotificationManagerCompat.from(context).notify(notificationIdFor(reminder.id), notification)
         } catch (_: SecurityException) {
             // Permission revoked between check and notify
         }
@@ -289,7 +353,7 @@ class NotificationHelper(private val context: Context) {
         val notification = NotificationCompat.Builder(context, NotificationChannels.FOCUS_TIMER)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("$sessionLabel complete")
-            .setContentText("Great work! You completed a $minutes-minute focus session.")
+            .setContentText("Completed $minutes-minute focus session")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSound(soundUriFor(ReminderTone.CHIME))
@@ -319,7 +383,7 @@ class NotificationHelper(private val context: Context) {
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("MYDAY Notification Diagnostics")
-            .setContentText("Sound (${tone.label}) & notification channel active.")
+            .setContentText("Sound (${tone.label}) and notification channel active")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSound(soundUriFor(tone))
@@ -336,6 +400,54 @@ class NotificationHelper(private val context: Context) {
         }
     }
 
+    fun startLoopingTestNotification(
+        tone: ReminderTone,
+        vibrate: Boolean,
+        snoozeMinutes: Int
+    ): Boolean {
+        if (!hasNotificationPermission()) return false
+        val testReminder = ReminderItem(
+            id = TEST_REMINDER_ID,
+            title = "MYDAY Test Reminder",
+            notes = "Looping ${tone.label} until dismissed or swiped",
+            scheduleType = com.myday.app.domain.model.ReminderScheduleType.ONE_TIME,
+            hour = 0,
+            minute = 0,
+            oneTimeEpochDay = null,
+            weekdays = emptySet(),
+            dayOfMonth = null,
+            intervalHours = null,
+            nextTriggerMillis = System.currentTimeMillis(),
+            isEnabled = true,
+            isCompleted = false,
+            snoozedUntilMillis = null,
+            playSound = true,
+            vibrate = vibrate,
+            targetType = com.myday.app.domain.model.ReminderTargetType.STANDALONE,
+            targetId = null,
+            lastTriggeredMillis = null,
+            createdAtMillis = 0L,
+            updatedAtMillis = 0L
+        )
+        return runCatching {
+            ReminderSoundService.start(
+                context = context,
+                reminder = testReminder,
+                tone = tone,
+                vibrate = vibrate,
+                snoozeMinutes = snoozeMinutes,
+                timeoutMs = 20_000L
+            )
+            true
+        }.getOrElse {
+            showTestNotification(tone)
+        }
+    }
+
+    fun stopLoopingRingtone() {
+        ReminderSoundService.stop(context)
+    }
+
     fun cancelNotification(reminderId: String) {
         NotificationManagerCompat.from(context).cancel(notificationIdFor(reminderId))
     }
@@ -343,6 +455,7 @@ class NotificationHelper(private val context: Context) {
     companion object {
         const val EXTRA_REMINDER_ID = "extra_reminder_id"
         const val EXTRA_SNOOZE_MINUTES = "extra_snooze_minutes"
+        const val TEST_REMINDER_ID = "myday_diag_test_reminder"
         private const val FOCUS_NOTIFICATION_ID = 900_001
         private const val TEST_NOTIFICATION_ID = 900_002
 

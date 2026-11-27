@@ -42,15 +42,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.myday.app.domain.model.FocusSessionItem
 import com.myday.app.domain.model.FocusSessionType
 import com.myday.app.presentation.components.CircularProgressRing
 import com.myday.app.presentation.components.EmptyStateCard
 import com.myday.app.presentation.components.MyDayCard
+import com.myday.app.presentation.components.MyDayStatusDot
 import com.myday.app.presentation.components.SectionHeader
-import com.myday.app.presentation.components.StatusPill
 import com.myday.app.presentation.theme.MyDayThemeExtras
 import com.myday.app.presentation.theme.rememberMyDayHaptic
 import com.myday.app.presentation.viewmodel.FocusUiState
@@ -92,7 +91,7 @@ fun FocusScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Focus Timer") },
+                title = { Text("Focus timer") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -108,10 +107,9 @@ fun FocusScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Mode Chips
             item {
                 Row(
                     modifier = Modifier
@@ -130,7 +128,7 @@ fun FocusScreen(
                 }
             }
 
-            // Timer Card
+            // Chronometer Ring Moment
             item {
                 val progress = if (timer.totalSeconds > 0) {
                     1f - (timer.remainingSeconds.toFloat() / timer.totalSeconds.toFloat())
@@ -140,20 +138,28 @@ fun FocusScreen(
 
                 MyDayCard {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = timer.selectedType.label,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            MyDayStatusDot(
+                                color = if (timer.isRunning) MyDayThemeExtras.colors.success else MyDayThemeExtras.colors.mutedText
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = timer.selectedType.label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         CircularProgressRing(
                             progress = progress,
-                            size = 200.dp,
-                            strokeWidth = 12.dp,
+                            size = 208.dp,
+                            strokeWidth = 8.dp,
                             accentColor = if (timer.selectedType == FocusSessionType.POMODORO ||
                                 timer.selectedType == FocusSessionType.CUSTOM
                             ) {
@@ -166,18 +172,19 @@ fun FocusScreen(
                                 Text(
                                     text = "%02d:%02d".format(mins, secs),
                                     style = MaterialTheme.typography.headlineLarge,
-                                    fontWeight = FontWeight.Bold
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = if (timer.isRunning) "Focusing..." else "Ready",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = if (timer.isRunning) "Focusing" else if (timer.sessionStartedAtMillis != null) "Paused" else "Ready",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MyDayThemeExtras.colors.mutedText
                                 )
                             }
                         }
 
                         if (timer.selectedType == FocusSessionType.CUSTOM && !timer.isRunning) {
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Custom duration: ${timer.customMinutes} min",
                                 style = MaterialTheme.typography.labelLarge
@@ -189,10 +196,10 @@ fun FocusScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (timer.isRunning) {
@@ -200,16 +207,16 @@ fun FocusScreen(
                                     haptic()
                                     onPause()
                                 }) {
-                                    Icon(Icons.Rounded.Pause, null)
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Icon(Icons.Rounded.Pause, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text("Pause")
                                 }
                                 OutlinedButton(onClick = {
                                     haptic()
                                     onFinishEarly()
                                 }) {
-                                    Icon(Icons.Rounded.Check, null)
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Icon(Icons.Rounded.Check, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text("Finish")
                                 }
                             } else {
@@ -217,14 +224,14 @@ fun FocusScreen(
                                     haptic()
                                     onStartOrResume()
                                 }) {
-                                    Icon(Icons.Rounded.PlayArrow, null)
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Icon(Icons.Rounded.PlayArrow, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(if (timer.sessionStartedAtMillis != null) "Resume" else "Start")
                                 }
                                 if (timer.sessionStartedAtMillis != null || timer.remainingSeconds != timer.totalSeconds) {
                                     OutlinedButton(onClick = onReset) {
-                                        Icon(Icons.Rounded.Refresh, null)
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Icon(Icons.Rounded.Refresh, null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text("Reset")
                                     }
                                 }
@@ -234,14 +241,13 @@ fun FocusScreen(
                 }
             }
 
-            // Optional Task Link
             if (state.pendingTasks.isNotEmpty()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "Link to Task (optional)",
+                            text = "Link to task",
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MyDayThemeExtras.colors.mutedText
                         )
                         Row(
                             modifier = Modifier
@@ -252,7 +258,7 @@ fun FocusScreen(
                             FilterChip(
                                 selected = timer.linkedTaskId == null,
                                 onClick = { onLinkTask(null) },
-                                label = { Text("No Task") }
+                                label = { Text("None") }
                             )
                             state.pendingTasks.take(8).forEach { task ->
                                 FilterChip(
@@ -266,32 +272,31 @@ fun FocusScreen(
                 }
             }
 
-            // Daily Focus Stats
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MyDayCard(modifier = Modifier.weight(1f)) {
-                        Text("Today", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Today", style = MaterialTheme.typography.bodyMedium, color = MyDayThemeExtras.colors.mutedText)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("${state.todayFocusMinutes} min", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        Text("${state.todaySessionCount} sessions", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${state.todayFocusMinutes}m", style = MaterialTheme.typography.headlineLarge)
+                        Text("${state.todaySessionCount} sessions", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     MyDayCard(modifier = Modifier.weight(1f)) {
-                        Text("All-Time", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("All-time", style = MaterialTheme.typography.bodyMedium, color = MyDayThemeExtras.colors.mutedText)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("${state.totalFocusMinutes} min", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        Text("${state.recentSessions.size} recent logs", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${state.totalFocusMinutes}m", style = MaterialTheme.typography.headlineLarge)
+                        Text("${state.recentSessions.size} logged", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
 
-            // Session History
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 SectionHeader(
-                    title = "Session History",
-                    subtitle = "Recorded completed focus & break blocks"
+                    title = "Session history",
+                    subtitle = "Recorded focus and break blocks"
                 )
             }
 
@@ -300,7 +305,7 @@ fun FocusScreen(
                     EmptyStateCard(
                         icon = Icons.Rounded.Timer,
                         title = "No focus sessions yet",
-                        message = "Start a 25-minute Pomodoro or custom session to record your focus history."
+                        message = "Start a 25-minute Pomodoro or custom session to record focus time"
                     )
                 }
             } else {
@@ -330,30 +335,22 @@ private fun FocusSessionRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = session.type.label,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    StatusPill(
-                        text = "${(session.actualDurationSeconds / 60).coerceAtLeast(1)} min",
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                }
+                Text(
+                    text = "${session.type.label} • ${(session.actualDurationSeconds / 60).coerceAtLeast(1)} min",
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "$timeLabel • ${session.note}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MyDayThemeExtras.colors.mutedText
                 )
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(34.dp)) {
+            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
                 Icon(
                     Icons.Rounded.Delete,
                     contentDescription = "Delete Session",
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = MyDayThemeExtras.colors.mutedText,
                     modifier = Modifier.size(18.dp)
                 )
             }
